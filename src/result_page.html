@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>計算結果</title>
+<style>
+    body {
+        background-color: lightyellow;
+        margin: 10px
+    }
+    table {
+        border-collapse: collapse;
+        width: 100%;
+    }
+    th, td {
+        border: 1px solid black;
+        padding: 8px;
+        text-align: left;
+    }
+    th {
+        background-color: #f2f2f2;
+    }
+    .accordion {
+        cursor: pointer;
+        padding: 8px;
+        width: 100%;
+        border: none;
+        text-align: left;
+        outline: none;
+        transition:   0.4s;
+    }
+    .accordion:hover {
+        background-color: #ddd;
+    }
+    .accordion-panel {
+        padding: 0 18px;
+        display: none;
+        font-size: 8pt;
+        overflow: hidden;
+        background-color: #f1f1f1;
+    }
+    .accordion-detail {
+        font-size: 8pt;
+    }
+</style>
+</head>
+<body>
+    <h1>計算結果</h1>
+    <a href="input_page.html">入力フォームに戻る</a>
+    <!--<button type="button" onclick="localStorage.clear();">全データクリア</button>-->
+    <table id="dataTable">
+        <thead>
+            <tr>
+                <th>削除</th>
+                <th>編集</th>
+                <th>タイトル</th>
+                <th>収入</th>
+                <th>[B]経費</th>
+                <th>青色申告特別控除</th>
+                <th>⑫所得</th>
+                <th>㉙所得から差し引かれる金額(控除)</th>
+                <th>㉚課税所得[⑫ - ㉙]</th>
+                <th>㉛㉚に対する税額</th>
+                <th>㊹復興特別所得税額</th>
+                <th>㊺所得税及び復興特別所得税の額</th>
+                <th>㊽源泉徴収税額</th>
+                <th>㊾申告納税額</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- データはJavaScriptで動的に追加されます -->
+        </tbody>
+    </table>
+</body>
+<script>
+    // ローカルストレージからJSONデータを取得
+    const jsonData = JSON.parse(localStorage.getItem('finalTaxData'));
+
+    // アコーディオンを開閉する関数
+    function toggleAccordion(btn, panel) {
+        if (panel.style.display === "block") {
+            panel.style.display = "none";
+            btn.innerHTML = "内訳を表示";
+        } else {
+            panel.style.display = "block";
+            btn.innerHTML = "内訳を隠す";
+        }
+    }
+
+    //   テーブルにデータを追加する関数
+    function addDataToTable(data) {
+        let index = 0;
+        data.forEach((item, index) => {
+            index++;
+            const tableBody = document.getElementById('dataTable').getElementsByTagName('tbody')[0];
+            const row = tableBody.insertRow();
+
+            // 削除ボタンを追加
+            const deleteButton = document.createElement('button');
+            deleteButton.textContent = '削除';
+            deleteButton.className = 'delete-button';
+            deleteButton.addEventListener('click', () => {
+                //  ローカルストレージからデータを削除
+                data.splice(index - 1, 1);
+                localStorage.setItem('finalTaxData', JSON.stringify(data));
+                //  テーブルから行を削除
+                tableBody.removeChild(row);
+            });
+            const deleteCell = document.createElement('td');
+            deleteCell.appendChild(deleteButton);
+            row.appendChild(deleteCell);
+
+            //  編集ボタンを追加
+            const editButton = document.createElement('button');
+            editButton.textContent = '編集';
+            editButton.className = 'edit-button';
+            editButton.addEventListener('click', () => {
+                // GETパラメータ p  に行番号を設定して input_page.html  に遷移
+                window.location.href = `input_page.html?index=${index}`;
+            });
+            const editCell = document.createElement('td');
+            editCell.appendChild(editButton);
+            row.appendChild(editCell);
+
+            // 1．タイトル
+            const titleCell = row.insertCell();
+            titleCell.textContent = item.title;
+
+            // 2.収入と内訳
+            const totalIncomeCell = row.insertCell();
+            totalIncomeCell.textContent = item.totalIncome;
+            const incomeAccordionBtn = document.createElement('button');
+            incomeAccordionBtn.className = 'accordion';
+            incomeAccordionBtn.innerHTML = '詳細を表示';
+            incomeAccordionBtn.onclick = function() { toggleAccordion(this, incomeDetailsPanel); };
+            totalIncomeCell.appendChild(incomeAccordionBtn);
+            const incomeDetailsPanel = document.createElement('div');
+            incomeDetailsPanel.className = 'accordion-panel';
+            totalIncomeCell.appendChild(incomeDetailsPanel);
+
+            // 収入の内訳をアコーディオンに追加
+            const incomeDetail = document.createElement('p');
+            incomeDetail.classList.add('accordion-detail');
+            incomeDetail.textContent = `事業収入: ${formatNumber(item.businessIncome)}`;
+            incomeDetailsPanel.appendChild(incomeDetail.cloneNode(true));
+            incomeDetail.textContent = `給与`;
+            incomeDetailsPanel.appendChild(incomeDetail.cloneNode(true));
+            item.salaries.forEach(salary => {
+                // 給与の詳細をアコーディオンに追加
+                incomeDetail.textContent = `${salary.companyName}: ${formatNumber(salary.paymentAmount)}`;
+                incomeDetailsPanel.appendChild(incomeDetail.cloneNode(true));
+            });
+
+            // 3.経費と内訳
+            const expenseAmountCell = row.insertCell();
+            expenseAmountCell.textContent = formatNumber(item.expenseAmount);
+
+            // 4.青色申告特別控除と内訳
+            const expenseCategoryCell = row.insertCell();
+            expenseCategoryCell.textContent = formatNumber(item.expenseCategory);
+
+            // 5.所得
+            const totalOperatingProfitCell = row.insertCell();
+            totalOperatingProfitCell.textContent = item.totalOperatingProfit;
+
+            // 6.控除
+            const deductionCell = row.insertCell();
+            deductionCell.textContent = item.totalDeduction;
+            const deductionAccordionBtn = document.createElement('button');
+            deductionAccordionBtn.className = 'accordion';
+            deductionAccordionBtn.innerHTML = '詳細を表示';
+            deductionAccordionBtn.onclick = function() { toggleAccordion(this, deductionDetailsPanel); };
+            deductionCell.appendChild(deductionAccordionBtn);
+            const deductionDetailsPanel = document.createElement('div');
+            deductionDetailsPanel.className = 'accordion-panel';
+            deductionCell.appendChild(deductionDetailsPanel);
+
+            // 控除の内訳をアコーディオンに追加
+            const deductionDetail = document.createElement('p');
+            deductionDetail.classList.add('accordion-detail');
+            deductionDetail.textContent = `国民健康保険料: ${formatNumber(item.nationalHealthInsurance)}`;
+            deductionDetailsPanel.appendChild(deductionDetail.cloneNode(true));
+            deductionDetail.textContent = `国民年金: ${formatNumber(item.nationalPension)}`;
+            deductionDetailsPanel.appendChild(deductionDetail.cloneNode(true));
+            deductionDetail.textContent = `社会保険料控除(給与)`;
+            deductionDetailsPanel.appendChild(deductionDetail.cloneNode(true));
+            item.salaries.forEach(salary => {
+                deductionDetail.textContent = `${salary.companyName}: ${formatNumber(salary.socialInsurance)}`;
+                deductionDetailsPanel.appendChild(deductionDetail.cloneNode(true));
+            });
+            deductionDetail.textContent = `(新)生命保険料控除: ${formatNumber(item.newLifeInsurance)}`;
+            deductionDetailsPanel.appendChild(deductionDetail.cloneNode(true));
+            deductionDetail.textContent = `介護保険料控除: ${formatNumber(item.careInsurance)}`;
+            deductionDetailsPanel.appendChild(deductionDetail.cloneNode(true));
+            deductionDetail.textContent = `基礎控除: ${formatNumber(item.basicDeduction)}`;
+            deductionDetailsPanel.appendChild(deductionDetail.cloneNode(true));
+            deductionDetail.textContent = `寄附金控除: ${formatNumber(item.donation)}`;
+            deductionDetailsPanel.appendChild(deductionDetail.cloneNode(true));
+
+            // 6.㉚課税所得[⑫ - ㉙]
+            const taxableIncomeAmountCell = row.insertCell();
+            taxableIncomeAmountCell.textContent = item.taxableIncomeAmount;
+
+            // 7.㉛上の㉚に対する税額
+            const taxCell = row.insertCell();
+            taxCell.textContent = item.tax;
+
+            // 8.㊹復興特別所得税額[㊸×2.1%]
+            const reconstructionSpecialIncomeTaxAmountCell = row.insertCell();
+            reconstructionSpecialIncomeTaxAmountCell.textContent = item.reconstructionSpecialIncomeTaxAmount;
+
+            // 9.㊺所得税及び復興特別所得税の額[㊸＋㊹]
+            const tax2Cell = row.insertCell();
+            tax2Cell.textContent = item.tax2;
+
+            // 10.㊽源泉徴収税額
+            const withholdingTaxCell = row.insertCell();
+            withholdingTaxCell.textContent = item.totalWithholdingTax;
+            const withholdingTaxAccordionBtn = document.createElement('button');
+            withholdingTaxAccordionBtn.className = 'accordion';
+            withholdingTaxAccordionBtn.innerHTML = '詳細を表示';
+            withholdingTaxAccordionBtn.onclick = function() { toggleAccordion(this, withholdingTaxDetailsPanel); };
+            withholdingTaxCell.appendChild(withholdingTaxAccordionBtn);
+            const withholdingTaxDetailsPanel = document.createElement('div');
+            withholdingTaxDetailsPanel.className = 'accordion-panel';
+            withholdingTaxCell.appendChild(withholdingTaxDetailsPanel);
+
+            // 源泉徴収税額の内訳をアコーディオンに追加
+            const withholdingTaxDetail = document.createElement('p');
+            withholdingTaxDetail.classList.add('accordion-detail');
+            item.salaries.forEach(salary => {
+                withholdingTaxDetail.textContent = `${salary.companyName}: ${formatNumber(salary.withholdingTax)}`;
+                withholdingTaxDetailsPanel.appendChild(withholdingTaxDetail.cloneNode(true));
+            });
+
+            // 11.㊾申告納税額[㊺－㊽]
+            const finalTaxCell = row.insertCell();
+            finalTaxCell.textContent = item.finalTax;
+            tableBody.appendChild(row);
+        });
+
+    }
+
+    //   データが存在する場合、テーブルに追加
+    if (jsonData) {
+        // jsonData.forEach(data => addDataToTable(data));
+        addDataToTable(jsonData);
+    } else {
+        console.log('ローカルストレージにデータが存在しません。');
+    }
+
+    // 数字をカンマ区切り
+    function formatNumber(num) {
+        return num ? num.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,') : '';
+    }
+</script>
+</html>

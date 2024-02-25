@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>確定申告シミュレーター</title>
+<style>
+    body {
+        background-color: lightyellow;
+        margin: 10px
+    }
+    .salary-section {
+        margin-bottom: 1em;
+    }
+    .salary-section .add-button {
+        margin-top: 0.5em;
+    }
+    .sub-total-amount {
+        font-weight: 200;
+    }
+    .label-sub-total-amount {
+        font-weight: bold;
+        font-size: 14pt;
+    }
+    .label-total-amount {
+        font-weight: bold;
+        font-size: 16pt;
+    }
+    .input-text {
+        width: 10em;
+    }
+    .input-amount {
+        width: 5em;
+    }
+    .display-amount {
+        background-color: lightyellow;
+        width: 5em;
+        border: 0px solid #ccc;
+        font-size: 12pt;
+    }
+    .display-sub-total-amount {
+        background-color: lightyellow;
+        width: 6em;
+        border: 0px solid #ccc;
+        font-weight: bold;
+        font-size: 14pt;
+    }
+    .display-total-amount {
+        background-color: lightyellow;
+        width: 6em;
+        border: 0px solid #ccc;
+        font-weight: bold;
+        font-size: 16pt;
+    }
+    .annotation-link {
+        color: blue;
+        font-size: 9pt;
+    }
+</style>
+<script>
+    // 給与欄追加
+    function addSalaryField() {
+        const salarySection = document.querySelector('.salary-section');
+        const salaryField = document.createElement('div');
+        salaryField.innerHTML = `
+            <div class="salary-row">
+                    <!--<button type="button" id="delete-button">－</button>-->
+                <label for="companyName">会社名：</label>
+                <input type="text" class="input-text" id="companyName" name="companyName">
+                <label for="paymentAmount">㋔支払金額：</label>
+                <input type="text" class="input-amount" id="paymentAmount" name="paymentAmount" oninput="validateNumber(this)">
+                <label for="withholdingTax">[a]源泉徴収税額：</label>
+                <input type="text" class="input-amount" id="withholdingTax" name="withholdingTax" oninput="validateNumber(this)">
+                <label for="socialInsurance">[b]社会保険料の金額：</label>
+                <input type="text" class="input-amount" id="socialInsurance" name="socialInsurance" oninput="validateNumber(this)">
+                <!--<label for="category">区分：</label>
+                <select id="category" name="category">
+                    <option value="">区分を選択</option>
+                    <option value="category1">カテゴリー1</option>
+                    <option value="category2">カテゴリー2</option>
+                </select>-->
+            </div>
+        `;
+        salarySection.appendChild(salaryField);
+        document.querySelectorAll('.salary-section input[name="paymentAmount"], .salary-section input[name="withholdingTax"], .salary-section input[name="socialInsurance"]').forEach(input => {
+            input.addEventListener('change', updateTotal);
+        });
+
+        // const deleteButton = document.getElementById('delete-button');
+        // deleteButton.addEventListener('click', function() {
+        //     this.parentElement.remove();
+        // });
+    }
+
+    function validateNumber(input) {
+        input.value = input.value.replace(/[^0-9.]/g, '');
+    }
+
+    // 自動計算
+    function updateTotal() {
+        // 収入
+        let totalIncome = 0;
+        let totalBusinessIncome = 0;
+        const businessIncomeAmount = document.getElementById('businessIncome');
+        totalBusinessIncome += parseFloat(businessIncomeAmount.value) || 0;
+        totalIncome += totalBusinessIncome;
+
+        // 給与
+        const paymentAmounts = document.querySelectorAll('.salary-section input[name="paymentAmount"]');
+        let salaryTotal = 0;
+        paymentAmounts.forEach(input => {
+            salaryTotal += parseFloat(input.value) ||     0;
+        });
+        totalIncome += salaryTotal;
+        const salaryAfterDeductionAmount = calculateSalaryAfterDeductionAmount(salaryTotal)
+        document.getElementById('totalSalary').value = formatNumber(salaryTotal);
+        document.getElementById('salaryAfterDeductionAmount').value = formatNumber(salaryAfterDeductionAmount);
+        document.getElementById('totalIncome').value = formatNumber(totalIncome);
+
+        // 経費
+        let expenseTotal = 0;
+        const expenseAmount = document.getElementById('expenseAmount');
+        expenseTotal += parseFloat(expenseAmount.value) || 0;
+        const expenseCategoryAmount = document.getElementById('expenseCategory');
+        expenseTotal += parseFloat(expenseCategoryAmount.value) || 0;
+
+        let businessIncomeProfit = parseFloat(businessIncomeAmount.value) || 0;
+        businessIncomeProfit -= expenseTotal;
+        document.getElementById('businessIncomeProfit').value = formatNumber(businessIncomeProfit);
+        // document.getElementById('totalExpense').value = formatNumber(expenseTotal);
+
+        const totalOperatingProfit = (totalBusinessIncome - expenseTotal) + salaryAfterDeductionAmount;
+        document.getElementById('totalOperatingProfit').value = formatNumber(totalOperatingProfit);
+
+        // 控除
+        let totalDeduction = 0;
+        let totalSocialInsurance = 0;
+        let totalSalarySocialInsurance = 0;
+        const salarySocialInsuranceAmounts = document.querySelectorAll('.salary-section input[name="socialInsurance"]');
+        salarySocialInsuranceAmounts.forEach(input => {
+            totalSalarySocialInsurance += parseFloat(input.value) || 0;
+        });
+        document.getElementById('totalSalarySocialInsurance').value = formatNumber(totalSalarySocialInsurance);
+        totalSocialInsurance += totalSalarySocialInsurance;
+        const nationalHealthInsurance = document.getElementById('nationalHealthInsurance');
+        totalSocialInsurance += parseFloat(nationalHealthInsurance.value) || 0;
+        const nationalPension = document.getElementById('nationalPension');
+        totalSocialInsurance += parseFloat(nationalPension.value) || 0;
+
+        document.getElementById('totalSocialInsurance').value = formatNumber(totalSocialInsurance);
+        totalDeduction += totalSocialInsurance;
+        const newLifeInsurance = document.getElementById('newLifeInsurance');
+        totalDeduction += parseFloat(newLifeInsurance.value) || 0;
+        const careInsurance = document.getElementById('careInsurance');
+        totalDeduction += parseFloat(careInsurance.value) || 0;
+
+        const basicDeduction = calculateBasicDeduction(totalOperatingProfit);
+        document.getElementById('basicDeduction').value = basicDeduction;
+        document.getElementById('displayBasicDeduction').value = formatNumber(basicDeduction);
+        totalDeduction += basicDeduction;
+        const medicalExpense = document.getElementById('medicalExpense');
+        totalDeduction += parseFloat(medicalExpense.value) || 0;
+        const donation = document.getElementById('donation');
+        totalDeduction += parseFloat(donation.value) || 0;
+        document.getElementById('totalDeduction').value = formatNumber(totalDeduction);
+
+        // 税額
+        // const taxableIncomeAmount = Math.floor((totalIncome - expenseTotal - totalDeduction) / 1000) * 1000;
+        const beforeTaxableIncomeAmount = totalOperatingProfit - totalDeduction
+        const taxableIncomeAmount = Math.floor(beforeTaxableIncomeAmount / 1000) * 1000;
+        document.getElementById('taxableIncomeAmount').value = formatNumber(taxableIncomeAmount);
+        const tax = calculateTax(taxableIncomeAmount);
+        document.getElementById('tax').value = formatNumber(tax);
+
+        const reconstructionSpecialIncomeTaxAmount = calculateReconstructionSpecialIncomeTaxAmount(tax);
+        document.getElementById('reconstructionSpecialIncomeTaxAmount').value = formatNumber(reconstructionSpecialIncomeTaxAmount);
+        
+        const tax2 = tax + reconstructionSpecialIncomeTaxAmount;
+        document.getElementById('tax2').value = formatNumber(tax2);
+
+        const totalWithholdingTax = calculateTotalWithholdingTax();
+        document.getElementById('totalWithholdingTax').value = formatNumber(totalWithholdingTax);
+
+        const finalTax = Math.floor((tax2 - totalWithholdingTax) / 1000) * 1000;
+        document.getElementById('finalTax').value = formatNumber(finalTax);
+    }
+
+    // 基礎控除の計算
+    // https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/1199.htm
+    function calculateBasicDeduction(totalIncome) {
+        if (totalIncome <= 24000000) {
+            return 480000;
+        } else if (totalIncome > 24000000 && totalIncome <= 24500000) {
+            return 320000;
+        } else if (totalIncome > 24500000 && totalIncome <= 25000000) {
+            return 160000;
+        } else {
+            return 0;
+        }
+    }
+
+    // 給与控除額計算
+    // https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/1410.htm
+    function calculateSalaryAfterDeductionAmount(salary) {
+        let result;
+        if (salary <= 550999) {
+            result = 0;
+        } else if (salary >= 551000 && salary <= 1618999) {
+            result = salary - 550000;
+        } else if (salary >= 1619000 && salary <= 1619999) {
+            result = 1069000;
+        } else if (salary >= 1620000 && salary <= 1621999) {
+            result = 1070000;
+        } else if (salary >= 1622000 && salary <= 1623999) {
+            result = 1072000;
+        } else if (salary >= 1624000 && salary <= 1627999) {
+            result = 1074000;
+        } else if (salary >= 1628000 && salary <= 1799999) {
+            const A = Math.floor(salary / 4000) * 1000;
+            result = A * 2.4 + 100000;
+        } else if (salary >= 1800000 && salary <= 3599999) {
+            const A = Math.floor(salary / 4000) * 1000;
+            result = A * 2.8 - 80000;
+        } else if (salary >= 3600000 && salary <= 6599999) {
+            const A = Math.floor(salary / 4000) * 1000;
+            result = A * 3.2 - 440000;
+        } else if (salary >= 6600000 && salary <= 8499999) {
+            result = salary * 0.9 - 1100000;
+        } else if (salary >= 8500000) {
+            result = salary - 1950000;
+        }
+        return result;
+    }    
+
+    // 所得税の税額計算
+    // https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/2260.htm
+    function calculateTax(taxableIncomeAmount) {
+        let tax;
+        if (taxableIncomeAmount >= 1000 && taxableIncomeAmount <= 1949000) {
+            tax = taxableIncomeAmount * 0.05;
+        } else if (taxableIncomeAmount >= 1950000 && taxableIncomeAmount <= 3299000) {
+            tax = taxableIncomeAmount * 0.10 - 97500;
+        } else if (taxableIncomeAmount >= 3300000 && taxableIncomeAmount <= 6949000) {
+            tax = taxableIncomeAmount * 0.20 - 427500;
+        } else if (taxableIncomeAmount >= 6950000 && taxableIncomeAmount <= 8999000) {
+            tax = taxableIncomeAmount * 0.23 - 636000;
+        } else if (taxableIncomeAmount >= 9000000 && taxableIncomeAmount <= 17999000) {
+            tax = taxableIncomeAmount * 0.33 - 1536000;
+        } else if (taxableIncomeAmount >= 18000000 && taxableIncomeAmount <= 39999000) {
+            tax = taxableIncomeAmount * 0.40 - 2796000;
+        } else if (taxableIncomeAmount >= 40000000) {
+            tax = taxableIncomeAmount * 0.45 - 4796000;
+        }
+        return tax;
+    }
+
+    // 復興特別所得税額の税額計算
+    function calculateReconstructionSpecialIncomeTaxAmount(tax) {
+        let reconstructionSpecialIncomeTaxAmount = 0;
+        return Math.floor(tax * 0.021);
+    }
+
+    // 源泉徴収額の税額計算
+    function calculateTotalWithholdingTax() {
+        let totalWithholdingTax = 0;
+        const salaryWithholdingTax = document.querySelectorAll('.salary-section input[name="withholdingTax"]');
+        salaryWithholdingTax.forEach(input => {
+            totalWithholdingTax += parseFloat(input.value) || 0;
+        });
+        return totalWithholdingTax;
+    }
+    
+    // 初期表示
+    function setDefaultValuesFromLocalStorage() {
+        // ローカルストレージからデータを取得
+        const salaryData = localStorage.getItem('finalTaxData');
+        if (!salaryData) {
+            console.log('No data found in local storage.');
+            document.getElementById('saveButton').disabled = true;
+            return;
+        }
+
+        // URLからindexパラメータを取得
+        const urlParams = new URLSearchParams(window.location.search);
+        const index = urlParams.get('index');
+
+        // indexが指定されていない場合は何もしない
+        if (!index) {
+            console.log('No index parameter found in URL.');
+            return;
+        }
+
+        // JSONデータを解析
+        const data = JSON.parse(salaryData);
+        // 配列のpの値を取得
+        const lastItem = data[index - 1];
+
+        // 入力フォームの各フィールドに最後に記録された値を設定
+        document.getElementById('title').value = lastItem.title || '';
+        document.getElementById('businessIncome').value = lastItem.businessIncome || '';
+        document.getElementById('expenseAmount').value = lastItem.expenseAmount || '';
+        document.getElementById('expenseCategory').value = lastItem.expenseCategory || '';
+        document.getElementById('nationalHealthInsurance').value = lastItem.nationalHealthInsurance || '';
+        document.getElementById('nationalPension').value = lastItem.nationalPension || '';
+        document.getElementById('newLifeInsurance').value = lastItem.newLifeInsurance || '';
+        document.getElementById('basicDeduction').value = lastItem.basicDeduction || '';
+        document.getElementById('careInsurance').value = lastItem.careInsurance || '';
+        document.getElementById('medicalExpense').value = lastItem.medicalExpense || '';
+        document.getElementById('donation').value = lastItem.donation || '';
+
+        document.getElementById('companyName').value = lastItem.donation || '';
+        document.getElementById('paymentAmount').value = lastItem.donation || '';
+        document.getElementById('withholdingTax').value = lastItem.donation || '';
+        document.getElementById('socialInsurance').value = lastItem.donation || '';
+
+        const salaries = lastItem.salaries;
+
+        salaries.forEach((salary, index) => {
+            const newRow = document.querySelector('.salary-section .salary-row:last-child');
+
+            newRow.querySelector('input[name="companyName"]').value = salary.companyName;
+            newRow.querySelector('input[name="paymentAmount"]').value = salary.paymentAmount;
+            newRow.querySelector('input[name="withholdingTax"]').value = salary.withholdingTax;
+            newRow.querySelector('input[name="socialInsurance"]').value = salary.socialInsurance;
+            if (index < salaries.length - 1) {
+                addSalaryField();
+            }
+        });
+    }
+
+    // 数字をカンマ区切り
+    function formatNumber(num) {
+        return num ? num.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,') : '';
+    }
+
+    // 入力データを取得
+    function getInputData() {
+        const formData = new FormData(document.querySelector('form'));
+        const data = {
+            title: formData.get('title'),
+            businessIncome: formData.get('businessIncome'),
+            businessCategory: formData.get('businessCategory'),
+            totalIncome: formData.get('totalIncome'),
+            salaries: [],
+            expenseAmount: formData.get('expenseAmount'),
+            expenseCategory: formData.get('expenseCategory'),
+            // totalExpense: formData.get('totalExpense'),
+            businessIncomeProfit: formData.get('businessIncomeProfit'),
+            salaryAfterDeductionAmount: formData.get('salaryAfterDeductionAmount'),
+            totalOperatingProfit: formData.get('totalOperatingProfit'),
+            totalSocialInsurance: formData.get('totalSocialInsurance'),
+            nationalHealthInsurance: formData.get('nationalHealthInsurance'),
+            nationalPension: formData.get('nationalPension'),
+            totalSalarySocialInsurance: formData.get('totalSalarySocialInsurance'),
+            newLifeInsurance: formData.get('newLifeInsurance'),
+            careInsurance: formData.get('careInsurance'),
+            basicDeduction: formData.get('basicDeduction'),
+            medicalExpense: formData.get('medicalExpense'),
+            donation: formData.get('donation'),
+            totalDeduction: formData.get('totalDeduction'),
+            taxableIncomeAmount: formData.get('taxableIncomeAmount'),
+            tax: formData.get('tax'),
+            reconstructionSpecialIncomeTaxAmount: formData.get('reconstructionSpecialIncomeTaxAmount'),
+            tax2: formData.get('tax2'),
+            totalWithholdingTax: formData.get('totalWithholdingTax'),
+            finalTax: formData.get('finalTax'),
+            // finalTax2: formData.get('finalTax2')
+        };
+
+        const salarySections = document.querySelectorAll('.salary-row');
+            salarySections.forEach(section => {
+            const companyName = section.querySelector('input[name="companyName"]').value;
+            const paymentAmount = section.querySelector('input[name="paymentAmount"]').value;
+            const withholdingTax = section.querySelector('input[name="withholdingTax"]').value;
+            const socialInsurance = section.querySelector('input[name="socialInsurance"]').value;
+
+            data.salaries.push({
+                companyName,
+                paymentAmount,
+                withholdingTax,
+                socialInsurance
+            });
+        });
+        return data;
+    }
+
+    // データ記録（上書き）
+    function saveData() {
+        // URLからindexパラメータを取得
+        const urlParams = new URLSearchParams(window.location.search);
+        const index = urlParams.get('index');
+
+        //  ローカルストレージから既存のデータを取得
+        const existingData = localStorage.getItem('finalTaxData');
+        let finalTaxData = existingData ? JSON.parse(existingData) : [];
+
+        // index番目の配列の値を書き換え
+        if (index && finalTaxData[index - 1]) {
+            finalTaxData[index -1] = getInputData();
+            // データをローカルストレージに保存
+            localStorage.setItem('finalTaxData', JSON.stringify(finalTaxData));
+        } else {
+            console.log('Invalid index or no data found at index index in local storage.');
+            addData();
+        }
+        window.location.href = "result_page.html";
+    }
+
+    // データ追記
+    function addData() {
+
+        data = getInputData();
+
+        // ローカルストレージから既存のデータを取得
+        const existingData = localStorage.getItem('finalTaxData');
+        let finalTaxData = existingData ? JSON.parse(existingData) : [];
+
+        // 新しいデータを配列に追加
+        finalTaxData.push(data);
+
+        // データをローカルストレージに保存
+        localStorage.setItem('finalTaxData', JSON.stringify(finalTaxData));
+
+        // POSTリクエストを送信するためのコードをここに追加します。
+        //    例: fetch('https://example.com/api/submit', {
+        //             method: 'POST',
+        //             headers: {
+        //                 'Content-Type': 'application/json'
+        //             },
+        //             body: jsonData
+        //         })
+        //         .then(response => response.json())
+        //         .then(data => console.log(data))
+        //         .catch(error => console.error('Error:', error));
+        window.location.href = "result_page.html";
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        document.querySelector('.add-button').addEventListener('click', addSalaryField);
+        document.querySelectorAll('.salary-section input[name="paymentAmount"], .salary-section input[name="withholdingTax"], .salary-section input[name="socialInsurance"]').forEach(input => {
+            input.addEventListener('change', updateTotal);
+        });
+
+        document.getElementById('businessIncome').addEventListener('change', updateTotal);
+        document.getElementById('expenseAmount').addEventListener('change', updateTotal);
+        document.getElementById('expenseCategory').addEventListener('change', updateTotal);
+
+        document.getElementById('nationalHealthInsurance').addEventListener('change', updateTotal);
+        document.getElementById('nationalPension').addEventListener('change', updateTotal);
+        document.getElementById('newLifeInsurance').addEventListener('change', updateTotal);
+        document.getElementById('careInsurance').addEventListener('change', updateTotal);
+        document.getElementById('basicDeduction').addEventListener('change', updateTotal);
+        document.getElementById('medicalExpense').addEventListener('change', updateTotal);
+        document.getElementById('donation').addEventListener('change', updateTotal);
+
+        document.getElementById('saveButton').addEventListener('click', saveData);
+        document.getElementById('addButton').addEventListener('click', addData);
+        setDefaultValuesFromLocalStorage();
+    });
+</script>
+</head>
+<body onload="updateTotal()">
+<h1>確定申告シミュレーター</h1>
+<form>
+<a href="result_page.html">計算結果ページ</a><br>
+<label for="title">ラベル</label>
+<input type="text" class="input-text" id="title" name="title">
+<hr>
+<div class="contents">
+    <h2>収入金額等</h2>
+    <h3>事業</h3>
+    <label for="businessIncome">㋐営業等：</label>
+    <input type="text" class="input-amount" id="businessIncome" name="businessIncome" oninput="validateNumber(this)">
+
+    <h3>給与</h3>
+    <div class="salary-section">
+        <div class="salary-row">
+        <label for="companyName">会社名：</label>
+        <input type="text" class="input-text" id="companyName" name="companyName">
+        <label for="paymentAmount">㋔支払金額：</label>
+        <input type="text" class="input-amount" id="paymentAmount" name="paymentAmount" oninput="validateNumber(this)">
+        <label for="withholdingTax">[a]源泉徴収税額：</label>
+        <input type="text" class="input-amount" id="withholdingTax" name="withholdingTax" oninput="validateNumber(this)">
+        <label for="socialInsurance">[b]社会保険料の金額：</label>
+        <input type="text" class="input-amount" id="socialInsurance" name="socialInsurance" oninput="validateNumber(this)">
+        </div>
+    </div>
+    <button type="button" class="add-button">＋</button>
+    <p class="sub-total-amount">給与支払合計金額[㋔の合計]：<input type="text" class="display-amount" id="totalSalary" name="totalSalary" readonly></p>
+
+    <p class="label-sub-total-amount">[A]収入合計金額：<input type="text" class="display-sub-total-amount" id="totalIncome" name="totalIncome" readonly></p>
+
+    <hr>
+    <h2>所得金額等</h2>
+    <label for="expenseAmount">[B]経費：</label>
+    <input type="text" class="input-amount" id="expenseAmount" name="expenseAmount" oninput="validateNumber(this)"><br>
+    <label for="expenseCategory">(58)青色申告特別控除額：</label>
+    <select id="expenseCategory" name="expenseCategory">
+        <option value="0">-</option>
+        <option value="100000">10万</option>
+        <option value="550000">55万</option>
+        <option value="650000">65万</option>
+    </select>
+    <a class="annotation-link" href="https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/2072.htm" target="_blank">※参考(国税庁のページ)</a>
+    <h3>事業所得</h3>
+    <label for="businessIncomeProfit">①営業等の所得[㋐-B-(58)]：</label>
+    <input type="text" class="display-amount" id="businessIncomeProfit" name="businessIncomeProfit" readonly><br>
+    <h3>給与所得</h3>
+    <p class="sub-total-amount">⑥給与(控除後の金額)：<input type="text" class="display-amount" id="salaryAfterDeductionAmount" readonly>
+    <a class="annotation-link" href="https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/1410.htm" target="_blank">※参考(国税庁のページ)</a></p>
+    <p class="label-sub-total-amount">⑫所得金額[① + ⑥]：<input type="text" class="display-sub-total-amount" id="totalOperatingProfit" name="totalOperatingProfit" readonly></p>
+
+    <hr>
+    <h2>所得から差し引かれる金額(控除)</h2>
+    <label>社会保険料控除　</label>
+    <input type="text" class="display-amount" id="totalSocialInsurance" name="totalSocialInsurance" readonly>
+    <label for="nationalHealthInsurance">　（国民健康保険料：</label>
+    <input type="text" class="input-amount" id="nationalHealthInsurance" name="nationalHealthInsurance" oninput="validateNumber(this)">
+    <label for="nationalPension">国民年金：</label>
+    <input type="text" class="input-amount" id="nationalPension" name="nationalPension" oninput="validateNumber(this)">
+    <label for="nationalPension">社会保険料控除(給与)[bの合計]：</label>
+    <input type="text" class="display-amount" id="totalSalarySocialInsurance" name="totalSalarySocialInsurance" oninput="validateNumber(this)">）
+    <a class="annotation-link" href="https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/1130.htm" target="_blank">※参考(国税庁のページ)</a><br>
+    <label>生命保険料控除　</label>
+    <label for="newLifeInsurance">（新）生命保険料控除：</label>
+    <input type="text" class="input-amount" id="newLifeInsurance" name="newLifeInsurance" oninput="validateNumber(this)">
+    <label for="careInsurance">介護保険料控除：</label>
+    <input type="text" class="input-amount" class="input-amount" id="careInsurance" name="careInsurance" oninput="validateNumber(this)">
+    <a class="annotation-link" href="https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/1140.htm" target="_blank">※参考(国税庁のページ)</a></p>
+    <label for="basicDeduction">基礎控除：</label>
+    <input type="text" id="displayBasicDeduction" name="displayBasicDeduction" class="display-amount" readonly>
+    <a class="annotation-link" href="https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/1199.htm" target="_blank">※参考(国税庁のページ)</a><br>
+    <input type="hidden" id="basicDeduction" name="basicDeduction" value="480000">
+    <label for="medicalExpense">医療費控除：</label>
+    <input type="text" class="input-amount" id="medicalExpense" name="medicalExpense" oninput="validateNumber(this)">
+    <a class="annotation-link" href="https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/1120.htm" target="_blank">※参考(国税庁のページ)</a><br>
+    <label for="donation">寄附金控除：</label>
+    <input type="text" class="input-amount" id="donation" name="donation" oninput="validateNumber(this)">
+    <a class="annotation-link" href="https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/1150.htm" target="_blank">※参考(国税庁のページ)</a>
+
+    <p class="label-sub-total-amount">㉙控除合計金額：<input type="text" class="display-sub-total-amount" id="totalDeduction" name="totalDeduction" readonly></p>
+
+    <hr>
+    <h2>税金の計算</h2>
+    <p class="label-sub-total-amount">㉚課税される所得金額[⑫ - ㉙]：<input type="text" class="display-sub-total-amount" id="taxableIncomeAmount" name="taxableIncomeAmount" readonly></p>
+    <p class="label-sub-total-amount">㉛上の㉚に対する税額：<input type="text" class="display-sub-total-amount" id="tax" name="tax" readonly>
+    <a class="annotation-link" href="https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/2260.htm" target="_blank">※参考(国税庁のページ)</a></p>
+    <p class="label-sub-total-amount">㊹復興特別所得税額：<input type="text" class="display-sub-total-amount" id="reconstructionSpecialIncomeTaxAmount" name="reconstructionSpecialIncomeTaxAmount" readonly>
+    <a class="annotation-link" href="https://www.nta.go.jp/taxes/shiraberu/taxanswer/gensen/2507.htm" target="_blank">※参考(国税庁のページ)</a></p>
+    <p class="label-sub-total-amount">㊺所得税及び復興特別所得税の額：<input type="text" class="display-sub-total-amount" id="tax2" name="tax2" readonly></p>
+    <p class="label-sub-total-amount">㊽源泉徴収税額[aの合計]：<input type="text" class="display-sub-total-amount" id="totalWithholdingTax" name="totalWithholdingTax" readonly></p>
+    <p class="label-sub-total-amount">㊾申告納税額：<input type="text" class="display-sub-total-amount" id="finalTax" name="finalTax" readonly></p>
+    <hr>
+    <button type="button" id="saveButton">記録する（上書き）</button>
+    <button type="button" id="addButton">記録する（追記）</button>
+    </form>
+</div>
+</body>
+</html>
