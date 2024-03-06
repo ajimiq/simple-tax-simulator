@@ -180,7 +180,7 @@
         const totalWithholdingTax = calculateTotalWithholdingTax();
         document.getElementById('totalWithholdingTax').value = formatNumber(totalWithholdingTax);
 
-        const finalTax = Math.floor((tax2 - totalWithholdingTax) / 1000) * 1000;
+        const finalTax = Math.floor((tax2 - totalWithholdingTax) / 100) * 100;
         document.getElementById('finalTax').value = formatNumber(finalTax);
     }
 

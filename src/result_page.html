@@ -53,7 +53,7 @@
             <tr>
                 <th>削除</th>
                 <th>編集</th>
-                <th>タイトル</th>
+                <th>ラベル</th>
                 <th>収入</th>
                 <th>[B]経費</th>
                 <th>青色申告特別控除</th>
@@ -131,7 +131,7 @@
             totalIncomeCell.textContent = item.totalIncome;
             const incomeAccordionBtn = document.createElement('button');
             incomeAccordionBtn.className = 'accordion';
-            incomeAccordionBtn.innerHTML = '詳細を表示';
+            incomeAccordionBtn.innerHTML = '内訳を表示';
             incomeAccordionBtn.onclick = function() { toggleAccordion(this, incomeDetailsPanel); };
             totalIncomeCell.appendChild(incomeAccordionBtn);
             const incomeDetailsPanel = document.createElement('div');
@@ -146,7 +146,7 @@
             incomeDetail.textContent = `給与`;
             incomeDetailsPanel.appendChild(incomeDetail.cloneNode(true));
             item.salaries.forEach(salary => {
-                // 給与の詳細をアコーディオンに追加
+                // 給与の内訳をアコーディオンに追加
                 incomeDetail.textContent = `${salary.companyName}: ${formatNumber(salary.paymentAmount)}`;
                 incomeDetailsPanel.appendChild(incomeDetail.cloneNode(true));
             });
@@ -168,7 +168,7 @@
             deductionCell.textContent = item.totalDeduction;
             const deductionAccordionBtn = document.createElement('button');
             deductionAccordionBtn.className = 'accordion';
-            deductionAccordionBtn.innerHTML = '詳細を表示';
+            deductionAccordionBtn.innerHTML = '内訳を表示';
             deductionAccordionBtn.onclick = function() { toggleAccordion(this, deductionDetailsPanel); };
             deductionCell.appendChild(deductionAccordionBtn);
             const deductionDetailsPanel = document.createElement('div');
@@ -218,7 +218,7 @@
             withholdingTaxCell.textContent = item.totalWithholdingTax;
             const withholdingTaxAccordionBtn = document.createElement('button');
             withholdingTaxAccordionBtn.className = 'accordion';
-            withholdingTaxAccordionBtn.innerHTML = '詳細を表示';
+            withholdingTaxAccordionBtn.innerHTML = '内訳を表示';
             withholdingTaxAccordionBtn.onclick = function() { toggleAccordion(this, withholdingTaxDetailsPanel); };
             withholdingTaxCell.appendChild(withholdingTaxAccordionBtn);
             const withholdingTaxDetailsPanel = document.createElement('div');
