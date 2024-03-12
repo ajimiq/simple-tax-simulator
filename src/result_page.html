@@ -47,6 +47,7 @@
 <body>
     <h1>計算結果</h1>
     <a href="input_page.html">入力フォームに戻る</a>
+    <button id="copyButton">計算結果JSONをコピー</button>
     <!--<button type="button" onclick="localStorage.clear();">全データクリア</button>-->
     <table id="dataTable">
         <thead>
@@ -75,6 +76,29 @@
 <script>
     // ローカルストレージからJSONデータを取得
     const jsonData = JSON.parse(localStorage.getItem('finalTaxData'));
+
+    //   データが存在する場合、テーブルに追加
+    if (jsonData) {
+        // jsonData.forEach(data => addDataToTable(data));
+        addDataToTable(jsonData);
+    } else {
+        console.log('ローカルストレージにデータが存在しません。');
+    }
+
+    document.getElementById('copyButton').addEventListener('click', function() {
+        // ローカルストレージからJSONデータを取得
+        const jsonData = localStorage.getItem('finalTaxData');
+        if (jsonData) {
+            // データをクリップボードにコピー
+            navigator.clipboard.writeText(jsonData).then(function() {
+                alert('JSONデータがクリップボードにコピーされました。');
+            }).catch(function(err) {
+                console.error('クリップボードへのコピーに失敗しました: ', err);
+            });
+        } else {
+            alert('ローカルストレージにデータが存在しません。');
+        }
+    });
 
     // アコーディオンを開閉する関数
     function toggleAccordion(btn, panel) {
@@ -122,7 +146,7 @@
             editCell.appendChild(editButton);
             row.appendChild(editCell);
 
-            // 1．タイトル
+            // 1．ラベル
             const titleCell = row.insertCell();
             titleCell.textContent = item.title;
 
@@ -143,13 +167,21 @@
             incomeDetail.classList.add('accordion-detail');
             incomeDetail.textContent = `事業収入: ${formatNumber(item.businessIncome)}`;
             incomeDetailsPanel.appendChild(incomeDetail.cloneNode(true));
-            incomeDetail.textContent = `給与`;
-            incomeDetailsPanel.appendChild(incomeDetail.cloneNode(true));
+            let existSalaryPaymentAmount = false
             item.salaries.forEach(salary => {
-                // 給与の内訳をアコーディオンに追加
-                incomeDetail.textContent = `${salary.companyName}: ${formatNumber(salary.paymentAmount)}`;
-                incomeDetailsPanel.appendChild(incomeDetail.cloneNode(true));
+                if (salary.paymentAmount) {
+                    existSalaryPaymentAmount = true
+                }
             });
+            if (existSalaryPaymentAmount) {
+                incomeDetail.textContent = `給与`;
+                incomeDetailsPanel.appendChild(incomeDetail.cloneNode(true));
+                item.salaries.forEach(salary => {
+                    // 給与の内訳をアコーディオンに追加
+                    incomeDetail.textContent = `${salary.companyName}: ${formatNumber(salary.paymentAmount)}`;
+                    incomeDetailsPanel.appendChild(incomeDetail.cloneNode(true));
+                });
+            }
 
             // 3.経費と内訳
             const expenseAmountCell = row.insertCell();
@@ -182,12 +214,24 @@
             deductionDetailsPanel.appendChild(deductionDetail.cloneNode(true));
             deductionDetail.textContent = `国民年金: ${formatNumber(item.nationalPension)}`;
             deductionDetailsPanel.appendChild(deductionDetail.cloneNode(true));
-            deductionDetail.textContent = `社会保険料控除(給与)`;
-            deductionDetailsPanel.appendChild(deductionDetail.cloneNode(true));
+            let existSalarySocialInsurance = false
             item.salaries.forEach(salary => {
-                deductionDetail.textContent = `${salary.companyName}: ${formatNumber(salary.socialInsurance)}`;
-                deductionDetailsPanel.appendChild(deductionDetail.cloneNode(true));
+                if (salary.socialInsurance) {
+                    existSalarySocialInsurance = true
+                }
             });
+            if (existSalarySocialInsurance) {
+                deductionDetail.textContent = `社会保険料控除(給与)`;
+                deductionDetailsPanel.appendChild(deductionDetail.cloneNode(true));
+                item.salaries.forEach(salary => {
+                    deductionDetail.textContent = `${salary.companyName}: ${formatNumber(salary.socialInsurance)}`;
+                    deductionDetailsPanel.appendChild(deductionDetail.cloneNode(true));
+                });
+            }
+            if (item.smallBusinessMutualAidPremiumDeduction) {
+                deductionDetail.textContent = `小規模企業共済等掛金控除: ${formatNumber(item.smallBusinessMutualAidPremiumDeduction)}`;
+                deductionDetailsPanel.appendChild(deductionDetail.cloneNode(true));
+            }
             deductionDetail.textContent = `(新)生命保険料控除: ${formatNumber(item.newLifeInsurance)}`;
             deductionDetailsPanel.appendChild(deductionDetail.cloneNode(true));
             deductionDetail.textContent = `介護保険料控除: ${formatNumber(item.careInsurance)}`;
@@ -216,22 +260,30 @@
             // 10.㊽源泉徴収税額
             const withholdingTaxCell = row.insertCell();
             withholdingTaxCell.textContent = item.totalWithholdingTax;
-            const withholdingTaxAccordionBtn = document.createElement('button');
-            withholdingTaxAccordionBtn.className = 'accordion';
-            withholdingTaxAccordionBtn.innerHTML = '内訳を表示';
-            withholdingTaxAccordionBtn.onclick = function() { toggleAccordion(this, withholdingTaxDetailsPanel); };
-            withholdingTaxCell.appendChild(withholdingTaxAccordionBtn);
-            const withholdingTaxDetailsPanel = document.createElement('div');
-            withholdingTaxDetailsPanel.className = 'accordion-panel';
-            withholdingTaxCell.appendChild(withholdingTaxDetailsPanel);
-
-            // 源泉徴収税額の内訳をアコーディオンに追加
-            const withholdingTaxDetail = document.createElement('p');
-            withholdingTaxDetail.classList.add('accordion-detail');
+            let existWithholdingTax = false
             item.salaries.forEach(salary => {
-                withholdingTaxDetail.textContent = `${salary.companyName}: ${formatNumber(salary.withholdingTax)}`;
-                withholdingTaxDetailsPanel.appendChild(withholdingTaxDetail.cloneNode(true));
+                if (salary.withholdingTaxDetailsPanel) {
+                    existWithholdingTax = true
+                }
             });
+            if (existWithholdingTax) {
+                const withholdingTaxAccordionBtn = document.createElement('button');
+                withholdingTaxAccordionBtn.className = 'accordion';
+                withholdingTaxAccordionBtn.innerHTML = '内訳を表示';
+                withholdingTaxAccordionBtn.onclick = function() { toggleAccordion(this, withholdingTaxDetailsPanel); };
+                withholdingTaxCell.appendChild(withholdingTaxAccordionBtn);
+                const withholdingTaxDetailsPanel = document.createElement('div');
+                withholdingTaxDetailsPanel.className = 'accordion-panel';
+                withholdingTaxCell.appendChild(withholdingTaxDetailsPanel);
+
+                // 源泉徴収税額の内訳をアコーディオンに追加
+                const withholdingTaxDetail = document.createElement('p');
+                withholdingTaxDetail.classList.add('accordion-detail');
+                item.salaries.forEach(salary => {
+                    withholdingTaxDetail.textContent = `${salary.companyName}: ${formatNumber(salary.withholdingTax)}`;
+                    withholdingTaxDetailsPanel.appendChild(withholdingTaxDetail.cloneNode(true));
+                });
+            }
 
             // 11.㊾申告納税額[㊺－㊽]
             const finalTaxCell = row.insertCell();
@@ -239,14 +291,6 @@
             tableBody.appendChild(row);
         });
 
-    }
-
-    //   データが存在する場合、テーブルに追加
-    if (jsonData) {
-        // jsonData.forEach(data => addDataToTable(data));
-        addDataToTable(jsonData);
-    } else {
-        console.log('ローカルストレージにデータが存在しません。');
     }
 
     // 数字をカンマ区切り
