@@ -115,7 +115,7 @@
 
     <hr>
     <h2>所得から差し引かれる金額(控除)</h2>
-    <label>社会保険料控除　</label>
+    <label>⑬社会保険料控除　</label>
     <input type="text" class="display-amount" id="totalSocialInsurance" name="totalSocialInsurance" readonly>
     <label for="nationalHealthInsurance">　（国民健康保険料：</label>
     <input type="text" class="input-amount" id="nationalHealthInsurance" name="nationalHealthInsurance" oninput="validateNumber(this)">
@@ -124,25 +124,44 @@
     <label for="nationalPension">社会保険料控除(給与)[bの合計]：</label>
     <input type="text" class="display-amount" id="totalSalarySocialInsurance" name="totalSalarySocialInsurance" oninput="validateNumber(this)">）
     <a class="annotation-link" href="https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/1130.htm" target="_blank">※参考(国税庁のページ)</a><br>
-    <label for="smallBusinessMutualAidPremiumDeduction">小規模企業共済等掛金控除：</label>
+    <label for="smallBusinessMutualAidPremiumDeduction">⑭小規模企業共済等掛金控除：</label>
     <input type="text" class="input-amount" id="smallBusinessMutualAidPremiumDeduction" name="smallBusinessMutualAidPremiumDeduction" oninput="validateNumber(this)">
     <a class="annotation-link" href="https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/1135.htm" target="_blank">※参考(国税庁のページ)</a><br>
-    <label>生命保険料控除　</label>
+    <label>⑮生命保険料控除　</label>
     <label for="newLifeInsurance">（新）生命保険料控除：</label>
     <input type="text" class="input-amount" id="newLifeInsurance" name="newLifeInsurance" oninput="validateNumber(this)">
     <label for="careInsurance">介護保険料控除：</label>
     <input type="text" class="input-amount" class="input-amount" id="careInsurance" name="careInsurance" oninput="validateNumber(this)">
     <a class="annotation-link" href="https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/1140.htm" target="_blank">※参考(国税庁のページ)</a></p>
-    <label for="basicDeduction">基礎控除：</label>
+    <input type="hidden" id="basicDeduction" name="basicDeduction" value="480000">
+    <label for="spouseSpecialDeduction">㉑～㉒配偶者(特別)控除：</label>
+    <input type="text" id="displaySpouseSpecialDeduction" name="displaySpouseSpecialDeduction" class="display-amount" readonly>
+    <select id="spouseSpecialDeductionDiv" name="spouseSpecialDeductionDiv">
+        <option value="0">配偶者特別控除を受けるための要件を満たしていない</option>
+        <option value="1">配偶者特別控除を受けるための要件を満たしている</option>
+    </select>
+    配偶者の収入：
+    <input type="text" class="input-amount" id="spouseIncome" name="spouseIncome" oninput="validateNumber(this)">
+    <a class="annotation-link" href="https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/1195.htm" target="_blank">※参考(国税庁のページ)</a>
+    <input type="hidden" id="spouseSpecialDeduction" name="spouseSpecialDeduction"><br>
+    <label for="dependentDeduction">㉓扶養控除：</label>
+    <select id="dependentDeduction" name="dependentDeduction">
+        <option value="0">-</option>
+        <option value="380000">一般の控除対象扶養親族：38万円</option>
+        <option value="630000">特定扶養親族：63万円</option>
+        <option value="480000">老人扶養親族　同居老親等以外の者：48万円</option>
+        <option value="580000">老人扶養親族　同居老親等：58万円</option>
+    </select>
+    <a class="annotation-link" href="https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/1180.htm" target="_blank">※参考(国税庁のページ)</a><br>
+    <label for="basicDeduction">㉔基礎控除：</label>
     <input type="text" id="displayBasicDeduction" name="displayBasicDeduction" class="display-amount" readonly>
     <a class="annotation-link" href="https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/1199.htm" target="_blank">※参考(国税庁のページ)</a><br>
-    <input type="hidden" id="basicDeduction" name="basicDeduction" value="480000">
-    <label for="medicalExpense">医療費控除：</label>
+    <label for="medicalExpense">㉗医療費控除：</label>
     <input type="text" class="input-amount" id="medicalExpense" name="medicalExpense" oninput="validateNumber(this)">
     <a class="annotation-link" href="https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/1120.htm" target="_blank">※参考(国税庁のページ)</a><br>
-    <label for="donation">寄附金控除：</label>
+    <label for="donation">㉘寄附金控除：</label>
     <input type="text" class="input-amount" id="donation" name="donation" oninput="validateNumber(this)">
-    <a class="annotation-link" href="https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/1150.htm" target="_blank">※参考(国税庁のページ)</a>
+    <a class="annotation-link" href="https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/1150.htm" target="_blank">※参考(国税庁のページ)</a><br>
 
     <p class="label-sub-total-amount">㉙控除合計金額：<input type="text" class="display-sub-total-amount" id="totalDeduction" name="totalDeduction" readonly></p>
 
@@ -271,11 +290,29 @@
         totalDeduction += parseFloat(medicalExpense.value) || 0;
         const donation = document.getElementById('donation');
         totalDeduction += parseFloat(donation.value) || 0;
+        if (document.getElementById('spouseSpecialDeductionDiv').value === '1') {
+            const spouseSpecialDeduction = calculateSpouseSpecialDeduction(totalOperatingProfit, document.getElementById('spouseIncome').value);
+            // console.log(totalOperatingProfit)
+            // console.log(document.getElementById('spouseIncome').value)
+            // console.log(spouseSpecialDeduction)
+            document.getElementById('spouseSpecialDeduction').value = spouseSpecialDeduction;
+            document.getElementById('displaySpouseSpecialDeduction').value = formatNumber(spouseSpecialDeduction);
+            totalDeduction += parseFloat(spouseSpecialDeduction) || 0;
+        } else {
+            document.getElementById('spouseSpecialDeduction').value = 0;
+            document.getElementById('displaySpouseSpecialDeduction').value = '';
+        }
+        totalDeduction += parseFloat(spouseSpecialDeduction) || 0;
+        const dependentDeduction = document.getElementById('dependentDeduction');
+        totalDeduction += parseFloat(dependentDeduction.value) || 0;
         document.getElementById('totalDeduction').value = formatNumber(totalDeduction);
 
         // 税額
         // const taxableIncomeAmount = Math.floor((totalIncome - expenseTotal - totalDeduction) / 1000) * 1000;
         const beforeTaxableIncomeAmount = totalOperatingProfit - totalDeduction
+        // console.log(totalOperatingProfit)
+        // console.log(totalDeduction)
+        // console.log(beforeTaxableIncomeAmount)
         const taxableIncomeAmount = Math.floor(beforeTaxableIncomeAmount / 1000) * 1000;
         document.getElementById('taxableIncomeAmount').value = formatNumber(taxableIncomeAmount);
         const tax = calculateTax(taxableIncomeAmount);
@@ -340,6 +377,46 @@
             return 0;
         }
     }
+
+    // 配偶者(特別)控除の計算
+    // https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/1195.htm
+    function calculateSpouseSpecialDeduction(totalIncome, spouseIncome) {
+        // 控除額テーブル
+        const deductionTable = [
+            { spouseMin: 480000, spouseMax: 950000, deductions: [380000, 260000, 130000] },
+            { spouseMin: 950000, spouseMax: 1000000, deductions: [360000, 240000, 120000] },
+            { spouseMin: 1000000, spouseMax: 1050000, deductions: [310000, 210000, 110000] },
+            { spouseMin: 1050000, spouseMax: 1100000, deductions: [260000, 180000, 90000] },
+            { spouseMin: 1100000, spouseMax: 1150000, deductions: [210000, 140000, 70000] },
+            { spouseMin: 1150000, spouseMax: 1200000, deductions: [160000, 110000, 60000] },
+            { spouseMin: 1200000, spouseMax: 1250000, deductions: [110000, 80000, 40000] },
+            { spouseMin: 1250000, spouseMax: 1300000, deductions: [60000, 40000, 20000] },
+            { spouseMin: 1300000, spouseMax: 1330000, deductions: [30000, 20000, 10000] }
+        ];
+
+            // 納税者の所得区分に基づくインデックスの計算
+            let incomeIndex = 0;
+            if (totalIncome <= 9000000) {
+                incomeIndex = 0;
+            } else if (totalIncome <= 9500000) {
+                incomeIndex = 1;
+            } else if (totalIncome <= 10000000) {
+                incomeIndex = 2;
+            } else {
+                // 所得が1000万円超える場合は控除なし
+                return 0;
+            }
+            // 配偶者の所得金額を基に控除額を取得
+            for (const row of deductionTable) {
+                if (row.spouseMin < spouseIncome && spouseIncome <= row.spouseMax) {
+                    return row.deductions[incomeIndex];
+                }
+            }
+
+            // 配偶者の所得がテーブル外の場合、控除なし
+            return 0;
+    }
+    
 
     // 所得税の税額計算
     // https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/2260.htm
@@ -413,6 +490,9 @@
         document.getElementById('nationalPension').value = lastItem.nationalPension || '';
         document.getElementById('smallBusinessMutualAidPremiumDeduction').value = lastItem.smallBusinessMutualAidPremiumDeduction || '';
         document.getElementById('newLifeInsurance').value = lastItem.newLifeInsurance || '';
+        document.getElementById('spouseSpecialDeductionDiv').value = lastItem.spouseSpecialDeductionDiv || '';
+        document.getElementById('spouseIncome').value = lastItem.spouseIncome || '';
+        document.getElementById('dependentDeduction').value = lastItem.dependentDeduction || '';
         document.getElementById('basicDeduction').value = lastItem.basicDeduction || '';
         document.getElementById('careInsurance').value = lastItem.careInsurance || '';
         document.getElementById('medicalExpense').value = lastItem.medicalExpense || '';
@@ -456,6 +536,7 @@
             expenseCategory: formData.get('expenseCategory'),
             // totalExpense: formData.get('totalExpense'),
             businessIncomeProfit: formData.get('businessIncomeProfit'),
+            medicalExpense: formData.get('medicalExpense'),
             salaryAfterDeductionAmount: formData.get('salaryAfterDeductionAmount'),
             totalOperatingProfit: formData.get('totalOperatingProfit'),
             totalSocialInsurance: formData.get('totalSocialInsurance'),
@@ -466,8 +547,11 @@
             newLifeInsurance: formData.get('newLifeInsurance'),
             careInsurance: formData.get('careInsurance'),
             basicDeduction: formData.get('basicDeduction'),
-            medicalExpense: formData.get('medicalExpense'),
             donation: formData.get('donation'),
+            spouseSpecialDeductionDiv: formData.get('spouseSpecialDeductionDiv'),
+            spouseIncome: formData.get('spouseIncome'),
+            spouseSpecialDeduction: formData.get('spouseSpecialDeduction'),
+            dependentDeduction: formData.get('dependentDeduction'),
             totalDeduction: formData.get('totalDeduction'),
             taxableIncomeAmount: formData.get('taxableIncomeAmount'),
             tax: formData.get('tax'),
@@ -566,7 +650,11 @@
         document.getElementById('basicDeduction').addEventListener('change', updateTotal);
         document.getElementById('medicalExpense').addEventListener('change', updateTotal);
         document.getElementById('donation').addEventListener('change', updateTotal);
-
+        document.getElementById('dependentDeduction').addEventListener('change', updateTotal);
+        document.getElementById('spouseSpecialDeductionDiv').addEventListener('change', updateTotal);
+        document.getElementById('spouseSpecialDeduction').addEventListener('change', updateTotal);
+        document.getElementById('spouseIncome').addEventListener('change', updateTotal);
+        
         document.getElementById('saveButton').addEventListener('click', saveData);
         document.getElementById('addButton').addEventListener('click', addData);
         setDefaultValuesFromLocalStorage();
