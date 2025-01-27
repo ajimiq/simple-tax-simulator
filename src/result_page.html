@@ -9,16 +9,28 @@
         margin: 10px
     }
     table {
-        border-collapse: collapse;
         width: 100%;
+        table-layout: fixed;
+        border-collapse: collapse;
+        /* border-left: 5px double #000; */
     }
     th, td {
-        border: 1px solid black;
+        border: 1px solid #DDD;
         padding: 8px;
-        text-align: left;
+        /* resize: horizontal; */
+        overflow: hidden;
     }
-    th {
-        background-color: #f2f2f2;
+    /* ドラッグ可能な行のスタイル */
+    .draggable {
+        cursor: move;
+    }
+    /* ドラッグ中の行のスタイル */
+    .dragging {
+        opacity: 0.5;
+    }
+    /* 可能な場所のスタイル */
+    .drag-over {
+        border: 2px dashed #000;
     }
     .accordion {
         cursor: pointer;
@@ -43,6 +55,8 @@
         font-size: 8pt;
     }
 </style>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
 </head>
 <body>
     <h1>計算結果</h1>
@@ -52,8 +66,9 @@
     <table id="dataTable">
         <thead>
             <tr>
-                <th>削除</th>
-                <th>編集</th>
+                <th width="10px">　</th>
+                <th width="50px">削除</th>
+                <th width="50px">編集</th>
                 <th>ラベル</th>
                 <th>収入</th>
                 <th>[B]経費</th>
@@ -68,12 +83,16 @@
                 <th>㊾申告納税額</th>
             </tr>
         </thead>
-        <tbody>
+        <tbody id="sort-table">
             <!-- データはJavaScriptで動的に追加されます -->
         </tbody>
     </table>
 </body>
 <script>
+    // html要素を取得をしてSortableJSに設定します
+    const sortElement = document.getElementById('sort-table');
+    Sortable.create(sortElement);
+
     // ローカルストレージからJSONデータを取得
     const jsonData = JSON.parse(localStorage.getItem('finalTaxData'));
 
@@ -119,7 +138,22 @@
             const tableBody = document.getElementById('dataTable').getElementsByTagName('tbody')[0];
             const row = tableBody.insertRow();
 
-            // 削除ボタンを追加
+            // const drugCell = document.createElement('td');
+            // const span = document.createElement('span');
+            // span.className = 'material-symbols-outlined';
+            // span.textContent = '';
+            // drugCell.appendChild(span);
+            // row.appendChild(drugCell);
+
+            const dragCell = document.createElement('td');
+            const img = document.createElement('img');
+            img.src = './drag_indicator_24dp_5F6368_FILL0_wght400_GRAD0_opsz24.png';
+            img.width = 20; // 幅を100pxに設定
+            img.height = 20; // 高さを100pxに設定
+            dragCell.appendChild(img);
+            row.appendChild(dragCell);
+
+            // 1.削除ボタン
             const deleteButton = document.createElement('button');
             deleteButton.textContent = '削除';
             deleteButton.className = 'delete-button';
@@ -134,7 +168,7 @@
             deleteCell.appendChild(deleteButton);
             row.appendChild(deleteCell);
 
-            //  編集ボタンを追加
+            // 2.編集ボタン
             const editButton = document.createElement('button');
             editButton.textContent = '編集';
             editButton.className = 'edit-button';
@@ -146,11 +180,11 @@
             editCell.appendChild(editButton);
             row.appendChild(editCell);
 
-            // 1．ラベル
+            // 3.ラベル
             const titleCell = row.insertCell();
             titleCell.textContent = item.title;
 
-            // 2.収入と内訳
+            // 4.収入と内訳
             const totalIncomeCell = row.insertCell();
             totalIncomeCell.textContent = item.totalIncome;
             const incomeAccordionBtn = document.createElement('button');
@@ -183,19 +217,19 @@
                 });
             }
 
-            // 3.経費と内訳
+            // 5.経費と内訳
             const expenseAmountCell = row.insertCell();
             expenseAmountCell.textContent = formatNumber(item.expenseAmount);
 
-            // 4.青色申告特別控除と内訳
+            // 6.青色申告特別控除と内訳
             const expenseCategoryCell = row.insertCell();
             expenseCategoryCell.textContent = formatNumber(item.expenseCategory);
 
-            // 5.所得
+            // 7.所得
             const totalOperatingProfitCell = row.insertCell();
             totalOperatingProfitCell.textContent = item.totalOperatingProfit;
 
-            // 6.控除
+            // 8.控除
             const deductionCell = row.insertCell();
             deductionCell.textContent = item.totalDeduction;
             const deductionAccordionBtn = document.createElement('button');
@@ -247,23 +281,23 @@
             deductionDetail.textContent = `寄附金控除: ${formatNumber(item.donation)}`;
             deductionDetailsPanel.appendChild(deductionDetail.cloneNode(true));
 
-            // 6.㉚課税所得[⑫ - ㉙]
+            // 9.㉚課税所得[⑫ - ㉙]
             const taxableIncomeAmountCell = row.insertCell();
             taxableIncomeAmountCell.textContent = item.taxableIncomeAmount;
 
-            // 7.㉛上の㉚に対する税額
+            // 10.㉛上の㉚に対する税額
             const taxCell = row.insertCell();
             taxCell.textContent = item.tax;
 
-            // 8.㊹復興特別所得税額[㊸×2.1%]
+            // 11.㊹復興特別所得税額[㊸×2.1%]
             const reconstructionSpecialIncomeTaxAmountCell = row.insertCell();
             reconstructionSpecialIncomeTaxAmountCell.textContent = item.reconstructionSpecialIncomeTaxAmount;
 
-            // 9.㊺所得税及び復興特別所得税の額[㊸＋㊹]
+            // 12.㊺所得税及び復興特別所得税の額[㊸＋㊹]
             const tax2Cell = row.insertCell();
             tax2Cell.textContent = item.tax2;
 
-            // 10.㊽源泉徴収税額
+            // 13.㊽源泉徴収税額
             const withholdingTaxCell = row.insertCell();
             withholdingTaxCell.textContent = item.totalWithholdingTax;
             let existWithholdingTax = false
@@ -291,12 +325,66 @@
                 });
             }
 
-            // 11.㊾申告納税額[㊺－㊽]
+            // 14.㊾申告納税額[㊺－㊽]
             const finalTaxCell = row.insertCell();
             finalTaxCell.textContent = item.finalTax;
-            tableBody.appendChild(row);
-        });
+            // 15.json
+            const hiddenTag = document.createElement('hidden');
+            finalTaxCell.parentNode.insertBefore(hiddenTag, finalTaxCell.nextSibling);
+            hiddenTag.className = 'json_' + index;
+            hiddenTag.setAttribute('value', JSON.stringify(item));
 
+            finalTaxCell.textContent = item.finalTax;
+            tableBody.appendChild(row);
+
+            // ドラッグ&ドロップのイベントリスナーを追加
+            var draggedRow = null;
+
+            tableBody.addEventListener('dragstart', function(event) {
+                console.log(event);
+                draggedRow = event.target;
+                event.target.classList.add('dragging');
+            });
+
+            tableBody.addEventListener('dragend', function(event) {
+                console.log(event);
+                event.target.classList.remove('dragging');
+            });
+
+            tableBody.addEventListener('dragover', function(event) {
+                console.log(event);
+                event.preventDefault();
+                var targetRow= event.target.closest('tr');
+                if (targetRow && targetRow !== draggedRow) {
+                    targetRow.classList.add('drag-over');
+                }
+            });
+
+            tableBody.addEventListener('dragleave', function(event) {
+                console.log(event);
+                var targetRow= event.target.closest('tr');
+                if (targetRow) {
+                    targetRow.classList.remove('drag-over');
+                }
+            });
+
+            tableBody.addEventListener('drop', function(event) {
+                console.log(event);
+                event.preventDefault();
+                var targetRow = event.target.closest('tr');
+                if (targetRow && draggedRow != targetRow) {
+                    // var rows = Array.from(tableBody.querySelectorAll('tr'));
+                    // var draggedIndex = rows.indexOf(draggedRow);
+                    // var targetIndex = rows.indexOf(targetRow);
+                    // if (draggedIndex < targetIndex) {
+                    //     targetRow.after(draggedRow);
+                    // } else {
+                    //     targetRow.before(draggedRow);
+                    // }
+                    targetRow.classList.remove('drag-over');
+                }
+            });
+        });
     }
 
     // 数字をカンマ区切り
