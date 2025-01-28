@@ -51,6 +51,9 @@
         overflow: hidden;
         background-color: #f1f1f1;
     }
+    .amount {
+        text-align: right;
+    }
     .accordion-detail {
         font-size: 8pt;
     }
@@ -66,21 +69,21 @@
     <table id="dataTable">
         <thead>
             <tr>
-                <th width="10px">　</th>
-                <th width="50px">削除</th>
-                <th width="50px">編集</th>
-                <th>ラベル</th>
-                <th>収入</th>
-                <th>[B]経費</th>
-                <th>青色申告特別控除</th>
-                <th>⑫所得</th>
-                <th>㉙所得から差し引かれる金額(控除)</th>
-                <th>㉚課税所得[⑫ - ㉙]</th>
-                <th>㉛㉚に対する税額</th>
-                <th>㊹復興特別所得税額</th>
-                <th>㊺所得税及び復興特別所得税の額</th>
-                <th>㊽源泉徴収税額</th>
-                <th>㊾申告納税額</th>
+                <th width="1%">　</th>
+                <th width="2%">削除</th>
+                <th width="2%">編集</th>
+                <th width="12%">ラベル</th>
+                <th width="8%">収入</th>
+                <th width="6%">[B]経費</th>
+                <th width="6%">青色申告特別控除</th>
+                <th width="6%">⑫所得</th>
+                <th width="12%">㉙所得から差し引かれる金額(控除)</th>
+                <th width="6%">㉚課税所得[⑫ - ㉙]</th>
+                <th width="6%">㉛㉚に対する税額</th>
+                <th width="6%">㊹復興特別所得税額</th>
+                <th width="6%">㊺所得税及び復興特別所得税の額</th>
+                <th width="6%">㊽源泉徴収税額</th>
+                <th width="6%">㊾申告納税額</th>
             </tr>
         </thead>
         <tbody id="sort-table">
@@ -145,6 +148,7 @@
             // drugCell.appendChild(span);
             // row.appendChild(drugCell);
 
+            // 0.ドラッグ
             const dragCell = document.createElement('td');
             const img = document.createElement('img');
             img.src = './drag_indicator_24dp_5F6368_FILL0_wght400_GRAD0_opsz24.png';
@@ -195,6 +199,7 @@
             const incomeDetailsPanel = document.createElement('div');
             incomeDetailsPanel.className = 'accordion-panel';
             totalIncomeCell.appendChild(incomeDetailsPanel);
+            totalIncomeCell.className = 'amount';
 
             // 収入の内訳をアコーディオンに追加
             const incomeDetail = document.createElement('p');
@@ -216,18 +221,22 @@
                     incomeDetailsPanel.appendChild(incomeDetail.cloneNode(true));
                 });
             }
+            incomeDetail.className = 'amount';
 
             // 5.経費と内訳
             const expenseAmountCell = row.insertCell();
             expenseAmountCell.textContent = formatNumber(item.expenseAmount);
+            expenseAmountCell.className = 'amount';
 
             // 6.青色申告特別控除と内訳
             const expenseCategoryCell = row.insertCell();
             expenseCategoryCell.textContent = formatNumber(item.expenseCategory);
+            expenseCategoryCell.className = 'amount';
 
             // 7.所得
             const totalOperatingProfitCell = row.insertCell();
             totalOperatingProfitCell.textContent = item.totalOperatingProfit;
+            totalOperatingProfitCell.className = 'amount';
 
             // 8.控除
             const deductionCell = row.insertCell();
@@ -240,6 +249,7 @@
             const deductionDetailsPanel = document.createElement('div');
             deductionDetailsPanel.className = 'accordion-panel';
             deductionCell.appendChild(deductionDetailsPanel);
+            deductionCell.className = 'amount';
 
             // 控除の内訳をアコーディオンに追加
             const deductionDetail = document.createElement('p');
@@ -280,22 +290,27 @@
             deductionDetailsPanel.appendChild(deductionDetail.cloneNode(true));
             deductionDetail.textContent = `寄附金控除: ${formatNumber(item.donation)}`;
             deductionDetailsPanel.appendChild(deductionDetail.cloneNode(true));
+            deductionDetail.className = 'amount';
 
             // 9.㉚課税所得[⑫ - ㉙]
             const taxableIncomeAmountCell = row.insertCell();
             taxableIncomeAmountCell.textContent = item.taxableIncomeAmount;
+            taxableIncomeAmountCell.className = 'amount';
 
             // 10.㉛上の㉚に対する税額
             const taxCell = row.insertCell();
             taxCell.textContent = item.tax;
+            taxCell.className = 'amount';
 
             // 11.㊹復興特別所得税額[㊸×2.1%]
             const reconstructionSpecialIncomeTaxAmountCell = row.insertCell();
             reconstructionSpecialIncomeTaxAmountCell.textContent = item.reconstructionSpecialIncomeTaxAmount;
+            reconstructionSpecialIncomeTaxAmountCell.className = 'amount';
 
             // 12.㊺所得税及び復興特別所得税の額[㊸＋㊹]
             const tax2Cell = row.insertCell();
             tax2Cell.textContent = item.tax2;
+            tax2Cell.className = 'amount';
 
             // 13.㊽源泉徴収税額
             const withholdingTaxCell = row.insertCell();
@@ -324,17 +339,19 @@
                     withholdingTaxDetailsPanel.appendChild(withholdingTaxDetail.cloneNode(true));
                 });
             }
+            withholdingTaxCell.className = 'amount';
 
             // 14.㊾申告納税額[㊺－㊽]
             const finalTaxCell = row.insertCell();
             finalTaxCell.textContent = item.finalTax;
+            finalTaxCell.className = 'amount';
+
             // 15.json
             const hiddenTag = document.createElement('hidden');
             finalTaxCell.parentNode.insertBefore(hiddenTag, finalTaxCell.nextSibling);
             hiddenTag.className = 'json_' + index;
             hiddenTag.setAttribute('value', JSON.stringify(item));
 
-            finalTaxCell.textContent = item.finalTax;
             tableBody.appendChild(row);
 
             // ドラッグ&ドロップのイベントリスナーを追加
