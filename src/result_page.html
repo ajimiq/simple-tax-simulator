@@ -65,6 +65,8 @@
     <h1>計算結果</h1>
     <a href="input_page.html">入力フォームに戻る</a>
     <button id="copyButton">計算結果JSONをコピー</button>
+    jsonファイル読み込み<input id="jsonUpload" type="file" accept=".json" name="jsonFile" required>
+    <button id="save">ローカルストレージに保存</button>
     <!--<button type="button" onclick="localStorage.clear();">全データクリア</button>-->
     <table id="dataTable">
         <thead>
@@ -107,6 +109,10 @@
         console.log('ローカルストレージにデータが存在しません。');
     }
 
+    document.getElementById('save').addEventListener('click', function() {
+        updateLocalStorageFromTable();
+    });
+
     document.getElementById('copyButton').addEventListener('click', function() {
         // ローカルストレージからJSONデータを取得
         const jsonData = localStorage.getItem('finalTaxData');
@@ -119,6 +125,37 @@
             });
         } else {
             alert('ローカルストレージにデータが存在しません。');
+        }
+    });
+
+    // JSONファイルを選択したときのイベントリスナー
+    document.getElementById('jsonUpload').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        
+        if (file && file.type === 'application/json') {
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                try {
+                    const jsonData = JSON.parse(e.target.result);
+                    
+                    // テーブルの内容をクリア
+                    const tableBody = document.getElementById('sort-table');
+                    while (tableBody.firstChild) {
+                        tableBody.removeChild(tableBody.firstChild);
+                    }
+                    
+                    // データをテーブルに追加
+                    addDataToTable(jsonData);
+                } catch (error) {
+                    console.error('JSON解析に失敗しました:', error);
+                    alert('JSONファイルの形式が不正です。');
+                }
+            };
+            
+            reader.readAsText(file);
+        } else {
+            alert('JSONファイルのみを選択してください。');
         }
     });
 
@@ -358,18 +395,18 @@
             var draggedRow = null;
 
             tableBody.addEventListener('dragstart', function(event) {
-                console.log(event);
+                // console.log(event);
                 draggedRow = event.target;
                 event.target.classList.add('dragging');
             });
 
             tableBody.addEventListener('dragend', function(event) {
-                console.log(event);
+                // console.log(event);
                 event.target.classList.remove('dragging');
             });
 
             tableBody.addEventListener('dragover', function(event) {
-                console.log(event);
+                // console.log(event);
                 event.preventDefault();
                 var targetRow= event.target.closest('tr');
                 if (targetRow && targetRow !== draggedRow) {
@@ -378,7 +415,7 @@
             });
 
             tableBody.addEventListener('dragleave', function(event) {
-                console.log(event);
+                // console.log(event);
                 var targetRow= event.target.closest('tr');
                 if (targetRow) {
                     targetRow.classList.remove('drag-over');
@@ -386,7 +423,7 @@
             });
 
             tableBody.addEventListener('drop', function(event) {
-                console.log(event);
+                // console.log(event);
                 event.preventDefault();
                 var targetRow = event.target.closest('tr');
                 if (targetRow && draggedRow != targetRow) {
@@ -402,6 +439,26 @@
                 }
             });
         });
+    }
+
+    // テーブル内のhidden要素を取得し、ローカルストレージに書き直す関数
+    function updateLocalStorageFromTable() {
+        // テーブル内のhidden要素を取得
+        const hiddenElements = document.querySelectorAll('[class^="json_"]');
+
+        // hidden要素の値を配列に格納
+        const jsonDataArray = [];
+        hiddenElements.forEach(element => {
+            jsonDataArray.push(JSON.parse(element.getAttribute('value')));
+        });
+
+        // 配列をJSON文字列に変換
+        const jsonString = JSON.stringify(jsonDataArray);
+        // ローカルストレージに保存
+        localStorage.setItem('finalTaxData', jsonString);
+
+        console.log('テーブル内のJSONデータをローカルストレージに更新しました。');
+        console.log(jsonString);
     }
 
     // 数字をカンマ区切り
