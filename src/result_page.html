@@ -66,7 +66,7 @@
     <a href="input_page.html">入力フォームに戻る</a>
     <button id="copyButton">計算結果JSONをコピー</button>
     jsonファイル読み込み<input id="jsonUpload" type="file" accept=".json" name="jsonFile" required>
-    <button id="save">ローカルストレージに保存</button>
+    <button id="save" disabled>ローカルストレージに保存</button>
     <!--<button type="button" onclick="localStorage.clear();">全データクリア</button>-->
     <table id="dataTable">
         <thead>
@@ -75,10 +75,10 @@
                 <th width="2%">削除</th>
                 <th width="2%">編集</th>
                 <th width="12%">ラベル</th>
-                <th width="8%">収入</th>
+                <th width="8%">[A]収入</th>
                 <th width="6%">[B]経費</th>
-                <th width="6%">青色申告特別控除</th>
-                <th width="6%">⑫所得</th>
+                <th width="6%">[58]青色申告特別控除</th>
+                <th width="6%">⑫所得[A-B-58]</th>
                 <th width="12%">㉙所得から差し引かれる金額(控除)</th>
                 <th width="6%">㉚課税所得[⑫ - ㉙]</th>
                 <th width="6%">㉛㉚に対する税額</th>
@@ -199,11 +199,13 @@
             deleteButton.textContent = '削除';
             deleteButton.className = 'delete-button';
             deleteButton.addEventListener('click', () => {
-                //  ローカルストレージからデータを削除
-                data.splice(index - 1, 1);
-                localStorage.setItem('finalTaxData', JSON.stringify(data));
+                // //  ローカルストレージからデータを削除
+                // data.splice(index - 1, 1);
+                // localStorage.setItem('finalTaxData', JSON.stringify(data));
                 //  テーブルから行を削除
                 tableBody.removeChild(row);
+                disabledButton('copyButton');
+                enabledButton('save');
             });
             const deleteCell = document.createElement('td');
             deleteCell.appendChild(deleteButton);
@@ -437,6 +439,8 @@
                     // }
                     targetRow.classList.remove('drag-over');
                 }
+                disabledButton('copyButton');
+                enabledButton('save');
             });
         });
     }
@@ -458,12 +462,21 @@
         localStorage.setItem('finalTaxData', jsonString);
 
         console.log('テーブル内のJSONデータをローカルストレージに更新しました。');
-        console.log(jsonString);
     }
 
     // 数字をカンマ区切り
     function formatNumber(num) {
         return num ? num.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,') : '';
+    }
+
+    function enabledButton(buttonName) {
+        const copyButton = document.getElementById(buttonName);
+        copyButton.disabled = false;
+    }
+
+    function disabledButton(buttonName) {
+        const copyButton = document.getElementById(buttonName);
+        copyButton.disabled = true;
     }
 </script>
 </html>
