@@ -287,7 +287,7 @@ function addDataToTable(data) {
     // 14.㊾申告納税額[㊺－㊽]
     const declaredTaxCell = row.insertCell();
     declaredTaxCell.textContent = item.declaredTax;
-    declaredTaxCell.className = 'amount';
+    declaredTaxCell.className = 'emphasis-amount';
 
     // 15.json
     const hiddenTag = document.createElement('hidden');
