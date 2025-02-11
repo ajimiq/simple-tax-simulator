@@ -3,63 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <title>計算結果</title>
-<style>
-  body {
-    background-color: lightyellow;
-    margin: 10px
-  }
-  table {
-    width: 100%;
-    table-layout: fixed;
-    border-collapse: collapse;
-    /* border-left: 5px double #000; */
-  }
-  th, td {
-    border: 1px solid #DDD;
-    padding: 8px;
-    /* resize: horizontal; */
-    overflow: hidden;
-  }
-  /* ドラッグ可能な行のスタイル */
-  .draggable {
-    cursor: move;
-  }
-  /* ドラッグ中の行のスタイル */
-  .dragging {
-    opacity: 0.5;
-  }
-  /* 可能な場所のスタイル */
-  .drag-over {
-    border: 2px dashed #000;
-  }
-  .accordion {
-    cursor: pointer;
-    padding: 8px;
-    width: 100%;
-    border: none;
-    text-align: left;
-    outline: none;
-    transition:   0.4s;
-  }
-  .accordion:hover {
-    background-color: #ddd;
-  }
-  .accordion-panel {
-    padding: 0 18px;
-    display: none;
-    font-size: 8pt;
-    overflow: hidden;
-    background-color: #f1f1f1;
-  }
-  .amount {
-    text-align: right;
-  }
-  .accordion-detail {
-    font-size: 8pt;
-  }
-</style>
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
 <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
+<link href="./css/common.css" rel="stylesheet"/>
+<link href="./css/result_page.css" rel="stylesheet"/>
 </head>
 <body>
   <h1>計算結果</h1>
@@ -188,7 +135,7 @@
       // 0.ドラッグ
       const dragCell = document.createElement('td');
       const img = document.createElement('img');
-      img.src = './drag_indicator_24dp_5F6368_FILL0_wght400_GRAD0_opsz24.png';
+      img.src = './images/drag_indicator_24dp_5F6368_FILL0_wght400_GRAD0_opsz24.png';
       img.width = 20; // 幅を100pxに設定
       img.height = 20; // 高さを100pxに設定
       dragCell.appendChild(img);

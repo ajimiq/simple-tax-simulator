@@ -1,0 +1,58 @@
+table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+  /* border-left: 5px double #000; */
+}
+
+th, td {
+  border: 1px solid #DDD;
+  padding: 8px;
+  /* resize: horizontal; */
+  overflow: hidden;
+}
+
+.amount {
+  text-align: right;
+}
+
+/* ドラッグ可能な行のスタイル */
+.draggable {
+  cursor: move;
+}
+
+/* ドラッグ中の行のスタイル */
+.dragging {
+  opacity: 0.5;
+}
+
+/* 可能な場所のスタイル */
+.drag-over {
+  border: 2px dashed #000;
+}
+
+.accordion {
+  cursor: pointer;
+  padding: 8px;
+  width: 100%;
+  border: none;
+  text-align: left;
+  outline: none;
+  transition:   0.4s;
+}
+
+.accordion:hover {
+  background-color: #ddd;
+}
+
+.accordion-panel {
+  padding: 0 18px;
+  display: none;
+  font-size: 8pt;
+  overflow: hidden;
+  background-color: #f1f1f1;
+}
+
+.accordion-detail {
+  font-size: 8pt;
+}
