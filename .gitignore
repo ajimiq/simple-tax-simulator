@@ -1,0 +1,7 @@
+src/backup/*
+src/old/*
+src/work/*
+src/tmp/*
+backup*
+CODING_GUIDE.md
+TODO_MEMO.md
