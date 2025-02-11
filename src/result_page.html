@@ -338,17 +338,17 @@
 
             // 10.㉛上の㉚に対する税額
             const taxCell = row.insertCell();
-            taxCell.textContent = item.tax;
+            taxCell.textContent = item.calculatedIncomeTax;
             taxCell.className = 'amount';
 
             // 11.㊹復興特別所得税額[㊸×2.1%]
             const reconstructionSpecialIncomeTaxAmountCell = row.insertCell();
-            reconstructionSpecialIncomeTaxAmountCell.textContent = item.reconstructionSpecialIncomeTaxAmount;
+            reconstructionSpecialIncomeTaxAmountCell.textContent = item.reconstructionSpecialIncomeTax;
             reconstructionSpecialIncomeTaxAmountCell.className = 'amount';
 
             // 12.㊺所得税及び復興特別所得税の額[㊸＋㊹]
             const tax2Cell = row.insertCell();
-            tax2Cell.textContent = item.tax2;
+            tax2Cell.textContent = item.totalTax;
             tax2Cell.className = 'amount';
 
             // 13.㊽源泉徴収税額
@@ -381,13 +381,13 @@
             withholdingTaxCell.className = 'amount';
 
             // 14.㊾申告納税額[㊺－㊽]
-            const finalTaxCell = row.insertCell();
-            finalTaxCell.textContent = item.finalTax;
-            finalTaxCell.className = 'amount';
+            const declaredTaxCell = row.insertCell();
+            declaredTaxCell.textContent = item.declaredTax;
+            declaredTaxCell.className = 'amount';
 
             // 15.json
             const hiddenTag = document.createElement('hidden');
-            finalTaxCell.parentNode.insertBefore(hiddenTag, finalTaxCell.nextSibling);
+            declaredTaxCell.parentNode.insertBefore(hiddenTag, declaredTaxCell.nextSibling);
             hiddenTag.className = 'json_' + index;
             hiddenTag.setAttribute('value', JSON.stringify(item));
 

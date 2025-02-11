@@ -165,13 +165,13 @@
     <hr>
     <h2>税金の計算</h2>
     <p class="label-sub-total-amount">㉚課税される所得金額[⑫ - ㉙]：<input type="text" id="taxableIncomeAmount" class="display-sub-total-amount" readonly></p>
-    <p class="label-sub-total-amount">㉛上の㉚に対する税額：<input type="text" id="tax" class="display-sub-total-amount" readonly>
+    <p class="label-sub-total-amount">㉛上の㉚に対する税額：<input type="text" id="calculatedIncomeTax" class="display-sub-total-amount" readonly>
     <a class="annotation-link" href="https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/2260.htm" target="_blank">※参考(国税庁のページ)</a></p>
-    <p class="label-sub-total-amount">㊹復興特別所得税額：<input type="text" id="reconstructionSpecialIncomeTaxAmount" class="display-sub-total-amount" readonly>
+    <p class="label-sub-total-amount">㊹復興特別所得税額：<input type="text" id="reconstructionSpecialIncomeTax" class="display-sub-total-amount" readonly>
     <a class="annotation-link" href="https://www.nta.go.jp/taxes/shiraberu/taxanswer/gensen/2507.htm" target="_blank">※参考(国税庁のページ)</a></p>
-    <p class="label-sub-total-amount">㊺所得税及び復興特別所得税の額：<input type="text" id="tax2" class="display-sub-total-amount" readonly></p>
+    <p class="label-sub-total-amount">㊺所得税及び復興特別所得税の額：<input type="text" id="totalTax" class="display-sub-total-amount" readonly></p>
     <p class="label-sub-total-amount">㊽源泉徴収税額[aの合計]：<input type="text" id="totalWithholdingTax" class="display-sub-total-amount" readonly></p>
-    <p class="label-sub-total-amount">㊾申告納税額：<input type="text" id="finalTax" class="display-sub-total-amount" readonly></p>
+    <p class="label-sub-total-amount">㊾申告納税額：<input type="text" id="declaredTax" class="display-sub-total-amount" readonly></p>
 
     <hr>
     <button type="button" id="saveButton">記録する（上書き）</button>
@@ -337,20 +337,20 @@
         const beforeTaxableIncomeAmount = totalOperatingProfit - totalDeduction
         const taxableIncomeAmount = Math.floor(beforeTaxableIncomeAmount / 1000) * 1000;
         document.getElementById('taxableIncomeAmount').value = formatNumber(taxableIncomeAmount);
-        const tax = calculateTax(taxableIncomeAmount);
-        document.getElementById('tax').value = formatNumber(tax);
+        const calculatedIncomeTax = calculateTax(taxableIncomeAmount);
+        document.getElementById('calculatedIncomeTax').value = formatNumber(calculatedIncomeTax);
 
-        const reconstructionSpecialIncomeTaxAmount = calculateReconstructionSpecialIncomeTaxAmount(tax);
-        document.getElementById('reconstructionSpecialIncomeTaxAmount').value = formatNumber(reconstructionSpecialIncomeTaxAmount);
+        const reconstructionSpecialIncomeTax = calculateReconstructionSpecialIncomeTaxAmount(calculatedIncomeTax);
+        document.getElementById('reconstructionSpecialIncomeTax').value = formatNumber(reconstructionSpecialIncomeTax);
         
-        const tax2 = tax + reconstructionSpecialIncomeTaxAmount;
-        document.getElementById('tax2').value = formatNumber(tax2);
+        const totalTax = calculatedIncomeTax + reconstructionSpecialIncomeTax;
+        document.getElementById('totalTax').value = formatNumber(totalTax);
 
         const totalWithholdingTax = calculateTotalWithholdingTax();
         document.getElementById('totalWithholdingTax').value = formatNumber(totalWithholdingTax);
 
-        const finalTax = Math.floor((tax2 - totalWithholdingTax) / 100) * 100;
-        document.getElementById('finalTax').value = formatNumber(finalTax);
+        const declaredTax = Math.floor((totalTax - totalWithholdingTax) / 100) * 100;
+        document.getElementById('declaredTax').value = formatNumber(declaredTax);
     }
 
     // 給与控除額計算
@@ -358,32 +358,31 @@
     function calculateSalaryAfterDeductionAmount(salary) {
         let result;
         if (salary <= 550999) {
-            result = 0;
+            return 0;
         } else if (salary >= 551000 && salary <= 1618999) {
-            result = salary - 550000;
+            return salary - 550000;
         } else if (salary >= 1619000 && salary <= 1619999) {
-            result = 1069000;
+            return 1069000;
         } else if (salary >= 1620000 && salary <= 1621999) {
-            result = 1070000;
+            return 1070000;
         } else if (salary >= 1622000 && salary <= 1623999) {
-            result = 1072000;
+            return 1072000;
         } else if (salary >= 1624000 && salary <= 1627999) {
-            result = 1074000;
+            return 1074000;
         } else if (salary >= 1628000 && salary <= 1799999) {
             const A = Math.floor(salary / 4000) * 1000;
-            result = A * 2.4 + 100000;
+            return A * 2.4 + 100000;
         } else if (salary >= 1800000 && salary <= 3599999) {
             const A = Math.floor(salary / 4000) * 1000;
-            result = A * 2.8 - 80000;
+            return A * 2.8 - 80000;
         } else if (salary >= 3600000 && salary <= 6599999) {
             const A = Math.floor(salary / 4000) * 1000;
-            result = A * 3.2 - 440000;
+            return A * 3.2 - 440000;
         } else if (salary >= 6600000 && salary <= 8499999) {
-            result = salary * 0.9 - 1100000;
+            return salary * 0.9 - 1100000;
         } else if (salary >= 8500000) {
-            result = salary - 1950000;
+            return salary - 1950000;
         }
-        return result;
     }    
 
     // 基礎控除の計算
@@ -443,29 +442,29 @@
     // 所得税の税額計算
     // https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/2260.htm
     function calculateTax(taxableIncomeAmount) {
-        let tax;
+        let calculatedIncomeTax;
         if (taxableIncomeAmount >= 1000 && taxableIncomeAmount <= 1949000) {
-            tax = taxableIncomeAmount * 0.05;
+            return taxableIncomeAmount * 0.05;
         } else if (taxableIncomeAmount >= 1950000 && taxableIncomeAmount <= 3299000) {
-            tax = taxableIncomeAmount * 0.10 - 97500;
+            return taxableIncomeAmount * 0.10 - 97500;
         } else if (taxableIncomeAmount >= 3300000 && taxableIncomeAmount <= 6949000) {
-            tax = taxableIncomeAmount * 0.20 - 427500;
+            return taxableIncomeAmount * 0.20 - 427500;
         } else if (taxableIncomeAmount >= 6950000 && taxableIncomeAmount <= 8999000) {
-            tax = taxableIncomeAmount * 0.23 - 636000;
+            return taxableIncomeAmount * 0.23 - 636000;
         } else if (taxableIncomeAmount >= 9000000 && taxableIncomeAmount <= 17999000) {
-            tax = taxableIncomeAmount * 0.33 - 1536000;
+            return taxableIncomeAmount * 0.33 - 1536000;
         } else if (taxableIncomeAmount >= 18000000 && taxableIncomeAmount <= 39999000) {
-            tax = taxableIncomeAmount * 0.40 - 2796000;
+            return taxableIncomeAmount * 0.40 - 2796000;
         } else if (taxableIncomeAmount >= 40000000) {
-            tax = taxableIncomeAmount * 0.45 - 4796000;
+            return taxableIncomeAmount * 0.45 - 4796000;
         }
-        return tax;
+        return 0;
     }
 
     // 復興特別所得税額の税額計算
-    function calculateReconstructionSpecialIncomeTaxAmount(tax) {
-        let reconstructionSpecialIncomeTaxAmount = 0;
-        return Math.floor(tax * 0.021);
+    function calculateReconstructionSpecialIncomeTaxAmount(calculatedIncomeTax) {
+        let reconstructionSpecialIncomeTax = 0;
+        return Math.floor(calculatedIncomeTax * 0.021);
     }
 
     // 源泉徴収額の税額計算
@@ -576,12 +575,11 @@
             dependentDeduction: document.getElementById('dependentDeduction').value,
             totalDeduction: document.getElementById('totalDeduction').value,
             taxableIncomeAmount: document.getElementById('taxableIncomeAmount').value,
-            tax: document.getElementById('tax').value,
-            reconstructionSpecialIncomeTaxAmount: document.getElementById('reconstructionSpecialIncomeTaxAmount').value,
-            tax2: document.getElementById('tax2').value,
+            calculatedIncomeTax: document.getElementById('calculatedIncomeTax').value,
+            reconstructionSpecialIncomeTax: document.getElementById('reconstructionSpecialIncomeTax').value,
+            totalTax: document.getElementById('totalTax').value,
             totalWithholdingTax: document.getElementById('totalWithholdingTax').value,
-            finalTax: document.getElementById('finalTax').value,
-            // finalTax2: document.getElementById('finalTax2').value
+            declaredTax: document.getElementById('declaredTax').value,
         };
 
         const salarySections = document.querySelectorAll('.salary-row');
