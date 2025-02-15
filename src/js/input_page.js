@@ -146,7 +146,7 @@ function updateTotal() {
   const donation = document.getElementById('donation');
   totalDeduction += parseFloat(donation.value) || 0;
   if (document.getElementById('spouseSpecialDeductionDiv').value === '1') {
-    const spouseSpecialDeduction = calculateSpouseSpecialDeduction(totalOperatingProfit, document.getElementById('spouseIncome').value);
+    const spouseSpecialDeduction = calculateSpouseDeduction(totalOperatingProfit, document.getElementById('spouseIncome').value);
     document.getElementById('spouseSpecialDeduction').value = spouseSpecialDeduction;
     document.getElementById('displaySpouseSpecialDeduction').value = formatNumber(spouseSpecialDeduction);
     totalDeduction += parseFloat(spouseSpecialDeduction) || 0;
@@ -233,9 +233,33 @@ function calculateBasicDeduction(totalIncome) {
   }
 }
 
+// 配偶者控除の計算
+// https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/1191.htm
+function calculateSpouseDeduction(totalIncome, spouseIncome) {
+
+  if (totalIncome >= 10000000) {
+    return 0;
+  }
+
+  // 配偶者の所得が48万円越の場合は配偶者(特別)控除を適用
+  if (spouseIncome > 480000) {
+    return calculateSpouseSpecialDeduction(totalIncome, spouseIncome);
+  }
+
+  if (totalIncome <= 9000000) {
+    return 380000;
+  } else if (totalIncome <= 9500000) {
+    return 260000;
+  } else if (totalIncome <= 10000000) {
+    return 130000;
+  }
+
+}
+
 // 配偶者(特別)控除の計算
 // https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/1195.htm
 function calculateSpouseSpecialDeduction(totalIncome, spouseIncome) {
+
   // 控除額テーブル
   const deductionTable = [
     { spouseMin: 480000, spouseMax: 950000, deductions: [380000, 260000, 130000] },
@@ -275,7 +299,6 @@ function calculateSpouseSpecialDeduction(totalIncome, spouseIncome) {
 // 所得税の税額計算
 // https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/2260.htm
 function calculateTax(taxableIncomeAmount) {
-  let calculatedIncomeTax;
   if (taxableIncomeAmount >= 1000 && taxableIncomeAmount <= 1949000) {
     return taxableIncomeAmount * 0.05;
   } else if (taxableIncomeAmount >= 1950000 && taxableIncomeAmount <= 3299000) {
