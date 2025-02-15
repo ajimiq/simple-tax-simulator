@@ -21,12 +21,29 @@ document.getElementById('copyButton').addEventListener('click', function() {
   // ローカルストレージからJSONデータを取得
   const jsonData = localStorage.getItem('finalTaxData');
   if (jsonData) {
-      // データをクリップボードにコピー
-      navigator.clipboard.writeText(jsonData).then(function() {
-      alert('JSONデータがクリップボードにコピーされました。');
-    }).catch(function(err) {
-      console.error('クリップボードへのコピーに失敗しました: ', err);
-    });
+    // JSONデータを整形
+    const formattedJsonData = JSON.stringify(JSON.parse(jsonData), null, 2);
+
+    // 現在の日本時間を取得してファイル名を生成
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const seconds = String(now.getSeconds()).padStart(2, '0');
+    const fileName = `final_tax_${year}${month}${day}${hours}${minutes}${seconds}.json`;
+
+    // JSONデータをBlobに変換
+    const blob = new Blob([formattedJsonData], { type: 'application/json' });
+
+    // ダウンロードリンクを作成してクリック
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   } else {
     alert('ローカルストレージにデータが存在しません。');
   }
@@ -127,13 +144,17 @@ function addDataToTable(data) {
     editCell.appendChild(editButton);
     row.appendChild(editCell);
 
-    // 3.ラベル
+    // 3.年
+    const yearCell = row.insertCell();
+    yearCell.textContent = item.year;
+
+    // 4.ラベル
     const titleCell = row.insertCell();
     titleCell.textContent = item.title;
 
-    // 4.収入と内訳
+    // 5.収入と内訳
     const totalIncomeCell = row.insertCell();
-    totalIncomeCell.textContent = item.totalIncome;
+    totalIncomeCell.textContent = formatNumber(item.totalIncome);
     const incomeAccordionBtn = document.createElement('button');
     incomeAccordionBtn.className = 'accordion';
     incomeAccordionBtn.innerHTML = '内訳を表示';
@@ -166,24 +187,24 @@ function addDataToTable(data) {
     }
     incomeDetail.className = 'amount';
 
-    // 5.経費と内訳
+    // 6.経費
     const expenseAmountCell = row.insertCell();
     expenseAmountCell.textContent = formatNumber(item.expenseAmount);
     expenseAmountCell.className = 'amount';
 
-    // 6.青色申告特別控除と内訳
-    const expenseCategoryCell = row.insertCell();
-    expenseCategoryCell.textContent = formatNumber(item.expenseCategory);
-    expenseCategoryCell.className = 'amount';
+    // 7.青色申告特別控除
+    const blueReturnSpecialSeductionCell = row.insertCell();
+    blueReturnSpecialSeductionCell.textContent = formatNumber(item.blueReturnSpecialSeduction);
+    blueReturnSpecialSeductionCell.className = 'amount';
 
-    // 7.所得
+    // 8.所得
     const totalOperatingProfitCell = row.insertCell();
-    totalOperatingProfitCell.textContent = item.totalOperatingProfit;
+    totalOperatingProfitCell.textContent = formatNumber(item.totalOperatingProfit);
     totalOperatingProfitCell.className = 'amount';
 
-    // 8.控除
+    // 9.控除と内訳
     const deductionCell = row.insertCell();
-    deductionCell.textContent = item.totalDeduction;
+    deductionCell.textContent = formatNumber(item.totalDeduction);
     const deductionAccordionBtn = document.createElement('button');
     deductionAccordionBtn.className = 'accordion';
     deductionAccordionBtn.innerHTML = '内訳を表示';
@@ -235,29 +256,45 @@ function addDataToTable(data) {
     deductionDetailsPanel.appendChild(deductionDetail.cloneNode(true));
     deductionDetail.className = 'amount';
 
-    // 9.㉚課税所得[⑫ - ㉙]
+    // 10.㉚課税所得
     const taxableIncomeAmountCell = row.insertCell();
-    taxableIncomeAmountCell.textContent = item.taxableIncomeAmount;
+    taxableIncomeAmountCell.textContent = formatNumber(item.taxableIncomeAmount);
     taxableIncomeAmountCell.className = 'amount';
 
-    // 10.㉛上の㉚に対する税額
+    // 11.㉛上の㉚に対する税額
     const taxCell = row.insertCell();
-    taxCell.textContent = item.calculatedIncomeTax;
+    taxCell.textContent = formatNumber(item.calculatedIncomeTax);
     taxCell.className = 'amount';
 
-    // 11.㊹復興特別所得税額[㊸×2.1%]
-    const reconstructionSpecialIncomeTaxAmountCell = row.insertCell();
-    reconstructionSpecialIncomeTaxAmountCell.textContent = item.reconstructionSpecialIncomeTax;
-    reconstructionSpecialIncomeTaxAmountCell.className = 'amount';
+    // 12.令和6年度特別税額控除
+    const fixedAmountTaxReductionCell = row.insertCell();
+    fixedAmountTaxReductionCell.textContent = formatNumber(item.fixedAmountTaxReduction);
+    fixedAmountTaxReductionCell.className = 'amount';
+    
+    // 13.所得税及び復興特別所得税の額と内訳
+    const totalTaxCell = row.insertCell();
+    totalTaxCell.textContent = formatNumber(item.totalTax);
+    const totalTaxBtn = document.createElement('button');
+    totalTaxBtn.className = 'accordion';
+    totalTaxBtn.innerHTML = '内訳を表示';
+    totalTaxBtn.onclick = function() { toggleAccordion(this, totalTaxPanel); };
+    totalTaxCell.appendChild(totalTaxBtn);
+    const totalTaxPanel = document.createElement('div');
+    totalTaxPanel.className = 'accordion-panel';
+    totalTaxCell.appendChild(totalTaxPanel);
+    totalTaxCell.className = 'amount';
 
-    // 12.㊺所得税及び復興特別所得税の額[㊸＋㊹]
-    const tax2Cell = row.insertCell();
-    tax2Cell.textContent = item.totalTax;
-    tax2Cell.className = 'amount';
+    // 所得税及び復興特別所得税の額の内訳をアコーディオンに追加
+    const totalTaxDetail = document.createElement('p');
+    totalTaxDetail.classList.add('accordion-detail');
+    totalTaxDetail.textContent = `復興特別所得税額: ${formatNumber(item.reconstructionSpecialIncomeTax)}`;
+    totalTaxPanel.appendChild(totalTaxDetail.cloneNode(true));
+    totalTaxDetail.textContent = `所得税: ${formatNumber(item.totalTax - item.reconstructionSpecialIncomeTax)}`;
+    totalTaxPanel.appendChild(totalTaxDetail.cloneNode(true));
 
-    // 13.㊽源泉徴収税額
+    // 14.㊽源泉徴収税額
     const withholdingTaxCell = row.insertCell();
-    withholdingTaxCell.textContent = item.totalWithholdingTax;
+    withholdingTaxCell.textContent = formatNumber(item.totalWithholdingTax);
     let existWithholdingTax = false
     item.salaries.forEach(salary => {
       if (salary.withholdingTaxDetailsPanel) {
@@ -284,12 +321,12 @@ function addDataToTable(data) {
     }
     withholdingTaxCell.className = 'amount';
 
-    // 14.㊾申告納税額[㊺－㊽]
+    // 15.申告納税額
     const declaredTaxCell = row.insertCell();
-    declaredTaxCell.textContent = item.declaredTax;
+    declaredTaxCell.textContent = formatNumber(item.declaredTax);
     declaredTaxCell.className = 'emphasis-amount';
 
-    // 15.json
+    // 16.json
     const hiddenTag = document.createElement('hidden');
     declaredTaxCell.parentNode.insertBefore(hiddenTag, declaredTaxCell.nextSibling);
     hiddenTag.className = 'json_' + index;

@@ -1,4 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('year').addEventListener('change', changeYear);
+
   document.querySelector('.add-button').addEventListener('click', addSalaryField);
   document.querySelectorAll('.salary-section input[id="paymentAmount"], .salary-section input[id="withholdingTax"], .salary-section input[id="socialInsurance"]').forEach(input => {
     input.addEventListener('change', updateTotal);
@@ -9,7 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('expenseAmount').addEventListener('change', updateTotal);
   document.getElementById('expenseAmountAdjust').addEventListener('change', updateTotal);
   document.getElementById('expenseAmountAdjust').addEventListener('change', clearExpenseAmountAdjust);
-  document.getElementById('expenseCategory').addEventListener('change', updateTotal);
+  document.getElementById('blueReturnSpecialSeduction').addEventListener('change', updateTotal);
 
   document.getElementById('nationalHealthInsurance').addEventListener('change', updateTotal);
   document.getElementById('nationalPension').addEventListener('change', updateTotal);
@@ -24,8 +26,12 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('spouseSpecialDeduction').addEventListener('change', updateTotal);
   document.getElementById('spouseIncome').addEventListener('change', updateTotal);
 
+  document.getElementById('fixedAmountTaxReductionDiv').addEventListener('change', updateTotal);
+
   document.getElementById('saveButton').addEventListener('click', saveData);
   document.getElementById('addButton').addEventListener('click', addData);
+
+  changeYear();
   setDefaultValuesFromLocalStorage();
 });
 
@@ -67,6 +73,9 @@ function clearExpenseAmountAdjust() {
 
 // 自動計算
 function updateTotal() {
+
+  const year = document.getElementById('year').value;
+
   // 収入
   let totalIncome = 0;
   let totalBusinessIncome = 0;
@@ -93,8 +102,8 @@ function updateTotal() {
   expenseAmount.value = adjustedExpenseAmount || null;
   let expenseTotal = 0;
   expenseTotal += parseFloat(expenseAmount.value) || 0;
-  const expenseCategoryAmount = document.getElementById('expenseCategory');
-  expenseTotal += parseFloat(expenseCategoryAmount.value) || 0;
+  const blueReturnSpecialSeductionAmount = document.getElementById('blueReturnSpecialSeduction');
+  expenseTotal += parseFloat(blueReturnSpecialSeductionAmount.value) || 0;
 
   let businessIncomeProfit = parseFloat(businessIncomeAmount.value) || 0;
   businessIncomeProfit -= expenseTotal;
@@ -154,8 +163,16 @@ function updateTotal() {
   const beforeTaxableIncomeAmount = totalOperatingProfit - totalDeduction
   const taxableIncomeAmount = Math.floor(beforeTaxableIncomeAmount / 1000) * 1000;
   document.getElementById('taxableIncomeAmount').value = formatNumber(taxableIncomeAmount);
-  const calculatedIncomeTax = calculateTax(taxableIncomeAmount);
+  let calculatedIncomeTax = calculateTax(taxableIncomeAmount);
   document.getElementById('calculatedIncomeTax').value = formatNumber(calculatedIncomeTax);
+
+  if (year == '2024') {
+    const fixedAmountTaxReduction = (parseFloat(document.getElementById('fixedAmountTaxReductionDiv').value) || 0) * 30000;
+    document.getElementById('fixedAmountTaxReduction').value = formatNumber(fixedAmountTaxReduction);
+    calculatedIncomeTax -= fixedAmountTaxReduction;
+  } else {
+    document.getElementById('fixedAmountTaxReduction').value = 0;
+  }
 
   const reconstructionSpecialIncomeTax = calculateReconstructionSpecialIncomeTaxAmount(calculatedIncomeTax);
   document.getElementById('reconstructionSpecialIncomeTax').value = formatNumber(reconstructionSpecialIncomeTax);
@@ -318,10 +335,11 @@ function setDefaultValuesFromLocalStorage() {
   const lastItem = data[index - 1];
 
   // 入力フォームの各フィールドに最後に記録された値を設定
+  document.getElementById('year').value = lastItem.year || '';
   document.getElementById('title').value = lastItem.title || '';
   document.getElementById('businessIncome').value = lastItem.businessIncome || '';
   document.getElementById('expenseAmount').value = lastItem.expenseAmount || '';
-  document.getElementById('expenseCategory').value = lastItem.expenseCategory || '';
+  document.getElementById('blueReturnSpecialSeduction').value = lastItem.blueReturnSpecialSeduction || '';
   document.getElementById('nationalHealthInsurance').value = lastItem.nationalHealthInsurance || '';
   document.getElementById('nationalPension').value = lastItem.nationalPension || '';
   document.getElementById('smallBusinessMutualAidPremiumDeduction').value = lastItem.smallBusinessMutualAidPremiumDeduction || '';
@@ -333,6 +351,8 @@ function setDefaultValuesFromLocalStorage() {
   document.getElementById('careInsurance').value = lastItem.careInsurance || '';
   document.getElementById('medicalExpense').value = lastItem.medicalExpense || '';
   document.getElementById('donation').value = lastItem.donation || '';
+
+  document.getElementById('fixedAmountTaxReductionDiv').value = lastItem.fixedAmountTaxReductionDiv || '';
 
   document.getElementById('companyName').value = lastItem.donation || '';
   document.getElementById('paymentAmount').value = lastItem.donation || '';
@@ -358,22 +378,23 @@ function setDefaultValuesFromLocalStorage() {
 function getInputData() {
   // const formData = new FormData(document.querySelector('form'));
   const data = {
+    year: document.getElementById('year').value,
     title: document.getElementById('title').value,
     businessIncome: document.getElementById('businessIncome').value,
     // businessCategory: document.getElementById('businessCategory').value,
-    totalIncome: document.getElementById('totalIncome').value,
+    totalIncome: unFormatNumber(document.getElementById('totalIncome').value),
     salaries: [],
     expenseAmount: document.getElementById('expenseAmount').value,
-    expenseCategory: document.getElementById('expenseCategory').value,
+    blueReturnSpecialSeduction: document.getElementById('blueReturnSpecialSeduction').value,
     // totalExpense: document.getElementById('totalExpense').value,
-    businessIncomeProfit: document.getElementById('businessIncomeProfit').value,
+    businessIncomeProfit: unFormatNumber(document.getElementById('businessIncomeProfit').value),
     medicalExpense: document.getElementById('medicalExpense').value,
-    salaryAfterDeductionAmount: document.getElementById('salaryAfterDeductionAmount').value,
-    totalOperatingProfit: document.getElementById('totalOperatingProfit').value,
-    totalSocialInsurance: document.getElementById('totalSocialInsurance').value,
+    salaryAfterDeductionAmount: unFormatNumber(document.getElementById('salaryAfterDeductionAmount').value),
+    totalOperatingProfit: unFormatNumber(document.getElementById('totalOperatingProfit').value),
+    totalSocialInsurance: unFormatNumber(document.getElementById('totalSocialInsurance').value),
     nationalHealthInsurance: document.getElementById('nationalHealthInsurance').value,
     nationalPension: document.getElementById('nationalPension').value,
-    totalSalarySocialInsurance: document.getElementById('totalSalarySocialInsurance').value,
+    totalSalarySocialInsurance: unFormatNumber(document.getElementById('totalSalarySocialInsurance').value),
     smallBusinessMutualAidPremiumDeduction: document.getElementById('smallBusinessMutualAidPremiumDeduction').value,
     newLifeInsurance: document.getElementById('newLifeInsurance').value,
     careInsurance: document.getElementById('careInsurance').value,
@@ -381,15 +402,17 @@ function getInputData() {
     donation: document.getElementById('donation').value,
     spouseSpecialDeductionDiv: document.getElementById('spouseSpecialDeductionDiv').value,
     spouseIncome: document.getElementById('spouseIncome').value,
-    spouseSpecialDeduction: document.getElementById('spouseSpecialDeduction').value,
+    spouseSpecialDeduction: unFormatNumber(document.getElementById('spouseSpecialDeduction').value),
     dependentDeduction: document.getElementById('dependentDeduction').value,
-    totalDeduction: document.getElementById('totalDeduction').value,
-    taxableIncomeAmount: document.getElementById('taxableIncomeAmount').value,
-    calculatedIncomeTax: document.getElementById('calculatedIncomeTax').value,
-    reconstructionSpecialIncomeTax: document.getElementById('reconstructionSpecialIncomeTax').value,
-    totalTax: document.getElementById('totalTax').value,
-    totalWithholdingTax: document.getElementById('totalWithholdingTax').value,
-    declaredTax: document.getElementById('declaredTax').value,
+    totalDeduction: unFormatNumber(document.getElementById('totalDeduction').value),
+    taxableIncomeAmount: unFormatNumber(document.getElementById('taxableIncomeAmount').value),
+    calculatedIncomeTax: unFormatNumber(document.getElementById('calculatedIncomeTax').value),
+    fixedAmountTaxReductionDiv: document.getElementById('fixedAmountTaxReductionDiv').value,
+    fixedAmountTaxReduction: unFormatNumber(document.getElementById('fixedAmountTaxReduction').value),
+    reconstructionSpecialIncomeTax: unFormatNumber(document.getElementById('reconstructionSpecialIncomeTax').value),
+    totalTax: unFormatNumber(document.getElementById('totalTax').value),
+    totalWithholdingTax: unFormatNumber(document.getElementById('totalWithholdingTax').value),
+    declaredTax: unFormatNumber(document.getElementById('declaredTax').value),
   };
 
   const salarySections = document.querySelectorAll('.salary-row');
@@ -447,4 +470,27 @@ function addData() {
   localStorage.setItem('finalTaxData', JSON.stringify(finalTaxData));
 
   window.location.href = "result_page.html";
+}
+
+// 年度変更
+function changeYear() {
+  const year = document.getElementById('year').value;
+  if (year === '2023') {
+    document.getElementById('fixedAmountTaxReductionSection').style.display = 'none';
+    document.getElementById('blueReturnSpecialSeductionLabel').textContent = '(58)';
+    // document.getElementById('ReDeductionIncomeTaxLabel').textContent = '㊸再差引所得税額(基準所得税額)：';
+    document.getElementById('reconstructionSpecialIncomeTaxLabel').textContent = '㊹';
+    document.getElementById('totalTaxLabel').textContent = '㊺';
+    document.getElementById('totalWithholdingTaxLabel').textContent = '㊽';
+    document.getElementById('declaredTaxLabel').textContent = '㊾';
+  } else if (year === '2024') {
+    document.getElementById('fixedAmountTaxReductionSection').style.display = 'block';
+    document.getElementById('blueReturnSpecialSeductionLabel').textContent = '(60)';
+    // document.getElementById('ReDeductionIncomeTaxLabel').textContent = '㊸再差引所得税額：';
+    document.getElementById('reconstructionSpecialIncomeTaxLabel').textContent = '㊻';
+    document.getElementById('totalTaxLabel').textContent = '㊼';
+    document.getElementById('totalWithholdingTaxLabel').textContent = '㊿';
+    document.getElementById('declaredTaxLabel').textContent = '(51)';
+  }
+  updateTotal();
 }

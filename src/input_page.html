@@ -10,10 +10,17 @@
 <h1>確定申告シミュレーター</h1>
 <form>
 <a href="result_page.html">計算結果ページ</a><br>
-<label for="title">ラベル</label>
-<input type="text" id="title" class="input-title-text" size="20">
+<label for="year">年度</label>
+<select id="year">
+  <option value="2023">2023年（令和5年）</option>
+  <option value="2024" selected>2024年（令和6年）</option>
+</select>
 <hr>
 <div class="contents">
+  <label for="title">ラベル</label>
+  <input type="text" id="title" class="input-title-text" size="20">
+  ※適当な名前を入れてください。例）2024年度シミュレーション1
+  <hr>
   <h2>収入金額等</h2>
   <h3>事業</h3>
   <label for="businessIncome">㋐営業等：</label>
@@ -32,8 +39,10 @@
     </div>
   </div>
   <button type="button" class="add-button">＋</button>
-  <p class="sub-total-amount">給与支払合計金額[㋔の合計]：<input type="text" id="totalSalary" class="display-amount" readonly></p>
-  <p class="label-sub-total-amount">[A]収入合計金額：<input type="text" id="totalIncome" class="display-sub-total-amount" readonly></p>
+  <label for="totalSalary"  class="sub-total-amount">給与支払合計金額[㋔の合計]：</label>
+  <input type="text" id="totalSalary" class="display-amount" readonly>
+  <label for="totalIncome" class="label-sub-total-amount">[A]収入合計金額：</label>
+  <input type="text" id="totalIncome" class="display-sub-total-amount" readonly>
 
   <hr>
   <h2>所得金額等</h2>
@@ -41,8 +50,8 @@
   <input type="text" id="expenseAmount" class="input-amount" oninput="validateNumber(this)">　
   調整：<input type="text" id="expenseAmountAdjust" class="input-amount" oninput="validateNumberAndMinus(this)">
   ※調整を入力したら自動的に経費に反映されます（マイナスも入力できます）<br>
-  <label for="expenseCategory">(58)青色申告特別控除額：</label>
-  <select id="expenseCategory">
+  <label for="blueReturnSpecialSeduction"><span id="blueReturnSpecialSeductionLabel"></span>青色申告特別控除額：</label>
+  <select id="blueReturnSpecialSeduction">
     <option value="0">-</option>
     <option value="100000">10万</option>
     <option value="550000">55万</option>
@@ -53,9 +62,11 @@
   <label for="businessIncomeProfit">①営業等の所得[㋐-B-(58)]：</label>
   <input type="text" id="businessIncomeProfit" class="display-amount" readonly><br>
   <h3>給与所得</h3>
-  <p class="sub-total-amount">⑥給与(控除後の金額)：<input type="text" id="salaryAfterDeductionAmount" class="display-amount" readonly>
-  <a class="annotation-link" href="https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/1410.htm" target="_blank">※参考(国税庁のページ)</a></p>
-  <p class="label-sub-total-amount">⑫所得金額[① + ⑥]：<input type="text" id="totalOperatingProfit" class="display-sub-total-amount" readonly></p>
+  <label for="salaryAfterDeductionAmount"  class="sub-total-amount">⑥給与(控除後の金額)：</label>
+  <input type="text" id="salaryAfterDeductionAmount" class="display-amount" readonly>
+  <a class="annotation-link" href="https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/1410.htm" target="_blank">※参考(国税庁のページ)</a><br>
+  <label for="totalOperatingProfit" class="label-sub-total-amount">⑫所得金額[① + ⑥]：</label>
+  <input type="text" id="totalOperatingProfit" class="display-sub-total-amount" readonly>
 
   <hr>
   <h2>所得から差し引かれる金額(控除)</h2>
@@ -106,18 +117,42 @@
   <label for="donation">㉘寄附金控除：</label>
   <input type="text" id="donation" class="input-amount" oninput="validateNumber(this)">
   <a class="annotation-link" href="https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/1150.htm" target="_blank">※参考(国税庁のページ)</a><br>
-  <p class="label-sub-total-amount">㉙控除合計金額：<input type="text" id="totalDeduction" class="display-sub-total-amount" readonly></p>
+  <label for="totalDeduction" class="label-sub-total-amount">㉙控除合計金額：</label>
+  <input type="text" id="totalDeduction" class="display-sub-total-amount" readonly>
 
   <hr>
   <h2>税金の計算</h2>
-  <p class="label-sub-total-amount">㉚課税される所得金額[⑫ - ㉙]：<input type="text" id="taxableIncomeAmount" class="display-sub-total-amount" readonly></p>
-  <p class="label-sub-total-amount">㉛上の㉚に対する税額：<input type="text" id="calculatedIncomeTax" class="display-sub-total-amount" readonly>
+  <label for="taxableIncomeAmount">㉚課税される所得金額[⑫ - ㉙]：</label>
+  <input type="text" id="taxableIncomeAmount" class="display-amount" readonly><br>
+  <label for="calculatedIncomeTax">㉛上の㉚に対する税額：</label>
+  <input type="text" id="calculatedIncomeTax" class="display-amount" readonly>
   <a class="annotation-link" href="https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/2260.htm" target="_blank">※参考(国税庁のページ)</a></p>
-  <p class="label-sub-total-amount">㊹復興特別所得税額：<input type="text" id="reconstructionSpecialIncomeTax" class="display-sub-total-amount" readonly>
+  <!-- <label for="ReDeductionIncomeTax"  class="label-sub-total-amount"><span id="ReDeductionIncomeTaxLabel"></span></label><input type="text" id="ReDeductionIncomeTax" class="display-sub-total-amount" readonly> -->
+  <div id="fixedAmountTaxReductionSection" style="display: none;">
+    <label for="fixedAmountTaxReductionDiv">㊹令和6年度特別税額控除(3万円×人数)：</label>
+    <input type="text" id="fixedAmountTaxReduction" class="display-amount" readonly>
+    人数：
+    <select id="fixedAmountTaxReductionDiv">
+      <option value="0">0人</option>
+      <option value="1" selected>1人</option>
+      <option value="2">2人</option>
+      <option value="3">3人</option>
+      <option value="4">4人</option>
+      <option value="5">5人</option>
+      <option value="6">6人</option>
+    </select>
+      <a class="annotation-link" href="https://www.nta.go.jp/publication/pamph/gensen/0023012-317.pdf" target="_blank">※参考(国税庁のページ)</a></p>
+    <!-- <label for="xxxxx" class="label-sub-total-amount">㊺再々差引所得税額(基準所得税額)</label><input type="text" id="xxxxx" class="display-sub-total-amount" readonly> -->
+  </div>
+  <label for="reconstructionSpecialIncomeTax"><span id="reconstructionSpecialIncomeTaxLabel"></span>復興特別所得税額：</label>
+  <input type="text" id="reconstructionSpecialIncomeTax" class="display-amount" readonly>
   <a class="annotation-link" href="https://www.nta.go.jp/taxes/shiraberu/taxanswer/gensen/2507.htm" target="_blank">※参考(国税庁のページ)</a></p>
-  <p class="label-sub-total-amount">㊺所得税及び復興特別所得税の額：<input type="text" id="totalTax" class="display-sub-total-amount" readonly></p>
-  <p class="label-sub-total-amount">㊽源泉徴収税額[aの合計]：<input type="text" id="totalWithholdingTax" class="display-sub-total-amount" readonly></p>
-  <p class="label-sub-total-amount">㊾申告納税額：<input type="text" id="declaredTax" class="display-sub-total-amount" readonly></p>
+  <label for="totalTax"><span id="totalTaxLabel"></span>所得税及び復興特別所得税の額：</label>
+  <input type="text" id="totalTax" class="display-amount" readonly><br>
+  <label for="totalWithholdingTax"><span id="totalWithholdingTaxLabel"></span>源泉徴収税額[aの合計]：</label>
+  <input type="text" id="totalWithholdingTax" class="display-amount" readonly><br>
+  <label for="declaredTax" class="label-sub-total-amount"><span id="declaredTaxLabel"></span>申告納税額：</label>
+  <input type="text" id="declaredTax" class="display-sub-total-amount" readonly>
 
   <hr>
   <button type="button" id="saveButton">記録する（上書き）</button>
