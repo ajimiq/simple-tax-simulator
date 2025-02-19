@@ -17,7 +17,7 @@ document.getElementById('save').addEventListener('click', function() {
   updateLocalStorageFromTable();
 });
 
-document.getElementById('copyButton').addEventListener('click', function() {
+document.getElementById('jsonDownload').addEventListener('click', function() {
   // ローカルストレージからJSONデータを取得
   const jsonData = localStorage.getItem('finalTaxData');
   if (jsonData) {
@@ -125,7 +125,7 @@ function addDataToTable(data) {
       // localStorage.setItem('finalTaxData', JSON.stringify(data));
       //  テーブルから行を削除
       tableBody.removeChild(row);
-      disabledButton('copyButton');
+      disabledButton('jsonDownload');
       enabledButton('save');
     });
     const deleteCell = document.createElement('td');
@@ -380,7 +380,7 @@ function addDataToTable(data) {
         // }
         targetRow.classList.remove('drag-over');
       }
-      disabledButton('copyButton');
+      disabledButton('jsonDownload');
       enabledButton('save');
     });
   });
@@ -403,14 +403,15 @@ function updateLocalStorageFromTable() {
   localStorage.setItem('finalTaxData', jsonString);
 
   console.log('テーブル内のJSONデータをローカルストレージに更新しました。');
+  jsonDownload.disabled = false;
 }
 
 function enabledButton(buttonName) {
-  const copyButton = document.getElementById(buttonName);
-  copyButton.disabled = false;
+  const jsonDownload = document.getElementById(buttonName);
+  jsonDownload.disabled = false;
 }
 
 function disabledButton(buttonName) {
-  const copyButton = document.getElementById(buttonName);
-  copyButton.disabled = true;
+  const jsonDownload = document.getElementById(buttonName);
+  jsonDownload.disabled = true;
 }

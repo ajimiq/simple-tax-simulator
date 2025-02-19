@@ -395,6 +395,7 @@ function setDefaultValuesFromLocalStorage() {
       addSalaryField();
     }
   });
+  changeYear();
 }
 
 // 入力データを取得
