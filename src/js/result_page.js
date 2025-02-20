@@ -15,6 +15,12 @@ if (jsonData) {
 
 document.getElementById('save').addEventListener('click', function() {
   updateLocalStorageFromTable();
+  jsonDownload.disabled = false;
+  // 編集ボタンを有効化
+  const editButtons = document.querySelectorAll('.edit-button');
+  editButtons.forEach(button => {
+    button.disabled = false;
+  });
 });
 
 document.getElementById('jsonDownload').addEventListener('click', function() {
@@ -68,10 +74,17 @@ document.getElementById('jsonUpload').addEventListener('change', function(e) {
 
         // データをテーブルに追加
         addDataToTable(jsonData);
+        // データがない場合、編集ボタンを無効化
+        const editButtons = document.querySelectorAll('.edit-button');
+        editButtons.forEach(button => {
+          button.disabled = true;
+        });
+        enabledButton('save');
       } catch (error) {
         console.error('JSON解析に失敗しました:', error);
         alert('JSONファイルの形式が不正です。');
       }
+
     };
     
     reader.readAsText(file);
@@ -403,7 +416,6 @@ function updateLocalStorageFromTable() {
   localStorage.setItem('finalTaxData', jsonString);
 
   console.log('テーブル内のJSONデータをローカルストレージに更新しました。');
-  jsonDownload.disabled = false;
 }
 
 function enabledButton(buttonName) {
