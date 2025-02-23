@@ -11,11 +11,14 @@ if (jsonData) {
   addDataToTable(jsonData);
 } else {
   console.log('ローカルストレージにデータが存在しません。');
+  disabledButton('jsonDownload');
+  disabledButton('clearLocalStorage');
 }
 
 document.getElementById('save').addEventListener('click', function() {
   updateLocalStorageFromTable();
-  jsonDownload.disabled = false;
+  enabledButton('jsonDownload');
+  enabledButton('clearLocalStorage');
   // 編集ボタンを有効化
   const editButtons = document.querySelectorAll('.edit-button');
   editButtons.forEach(button => {
@@ -55,7 +58,22 @@ document.getElementById('jsonDownload').addEventListener('click', function() {
   }
 });
 
-// JSONファイルを選択したときのイベントリスナー
+  // 全データクリアボタンのイベントリスナー
+  document.getElementById('clearLocalStorage').addEventListener('click', function() {
+    // ローカルストレージをクリア
+    localStorage.clear();
+    disabledButton('jsonDownload');
+    disabledButton('clearLocalStorage');
+    alert('ローカルストレージのデータがクリアされました。');
+
+    // テーブルの内容をクリア
+    const tableBody = document.getElementById('sort-table');
+    while (tableBody.firstChild) {
+      tableBody.removeChild(tableBody.firstChild);
+    }
+  });
+
+  // JSONファイルを選択したときのイベントリスナー
 document.getElementById('jsonUpload').addEventListener('change', function(e) {
   const file = e.target.files[0];
 
