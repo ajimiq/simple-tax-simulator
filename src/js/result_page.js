@@ -130,12 +130,13 @@ function addDataToTable(data) {
     const tableBody = document.getElementById('dataTable').getElementsByTagName('tbody')[0];
     const row = tableBody.insertRow();
 
-    // const drugCell = document.createElement('td');
-    // const span = document.createElement('span');
-    // span.className = 'material-symbols-outlined';
-    // span.textContent = '';
-    // drugCell.appendChild(span);
-    // row.appendChild(drugCell);
+    // チェックボックス
+    const checkboxCell = document.createElement('td');
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.className = 'select-row';
+    checkboxCell.appendChild(checkbox);
+    row.appendChild(checkboxCell);
 
     // 0.ドラッグ
     const dragCell = document.createElement('td');
@@ -445,3 +446,120 @@ function disabledButton(buttonName) {
   const jsonDownload = document.getElementById(buttonName);
   jsonDownload.disabled = true;
 }
+
+document.getElementById('drawChart').addEventListener('click', function() {
+  const selectedData = [];
+  const checkboxes = document.querySelectorAll('.select-row:checked');
+  
+  if (checkboxes.length > 3) {
+    alert('3つまでの行を選択してください。');
+    return;
+  }
+
+  checkboxes.forEach(checkbox => {
+    const row = checkbox.closest('tr');
+    const hiddenElement = row.querySelector('[class^="json_"]');
+    if (hiddenElement) {
+      selectedData.push(JSON.parse(hiddenElement.getAttribute('value')));
+    }
+  });
+
+  if (selectedData.length > 0) {
+    drawChart(selectedData);
+    document.getElementById('chartModal').style.display = "block"; // モーダルを表示
+  } else {
+    alert('データを選択してください。');
+  }
+});
+
+let myChart; // グローバル変数としてChartインスタンスを保持
+
+function drawChart(data) {
+  const labels = data.map(item => item.title);
+  const incomeData = data.map(item => item.totalIncome);
+  const expenseData = data.map(item => item.expenseAmount);
+  const declaredTaxData = data.map(item => item.declaredTax);
+
+  // 既存のグラフが存在する場合は破棄
+  if (myChart) {
+    myChart.destroy();
+  }
+
+  const ctx = document.getElementById('myChart').getContext('2d');
+  myChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          label: '収入',
+          data: incomeData,
+          backgroundColor: 'rgba(75, 192, 192, 0.2)',
+          borderColor: 'rgba(75, 192, 192, 1)',
+          borderWidth: 1,
+          yAxisID: 'left-y-axis' // 左軸
+        },
+        {
+          label: '経費',
+          data: expenseData,
+          backgroundColor: 'rgba(255, 99, 132, 0.2)',
+          borderColor: 'rgba(255, 99, 132, 1)',
+          borderWidth: 1,
+          yAxisID: 'right-y-axis' // 右軸
+        },
+        {
+          label: '申告納税額',
+          data: declaredTaxData,
+          backgroundColor: 'rgba(54, 162, 235, 0.2)',
+          borderColor: 'rgba(54, 162, 235, 1)',
+          borderWidth: 1,
+          yAxisID: 'right-y-axis' // 右軸
+        }
+      ]
+    },
+    options: {
+      scales: {
+        'left-y-axis': {
+          type: 'linear', // 左軸
+          position: 'left',
+          beginAtZero: true
+        },
+        'right-y-axis': {
+          type: 'linear', // 右軸
+          position: 'right',
+          beginAtZero: true,
+          grid: {
+            drawOnChartArea: false // 右軸のグリッド線を非表示
+          }
+        }
+      }
+    }
+  });
+}
+
+// モーダルを閉じる機能
+const modal = document.getElementById("chartModal");
+const span = document.getElementsByClassName("close")[0];
+
+span.onclick = function() {
+  modal.style.display = "none"; // モーダルを非表示
+}
+
+window.onclick = function(event) {
+  if (event.target == modal) {
+    modal.style.display = "none"; // モーダルを非表示
+  }
+}
+
+const drawChartButton = document.getElementById('drawChart');
+const tooltip = document.getElementById('chartTooltip');
+
+drawChartButton.addEventListener('mouseover', function(event) {
+  tooltip.style.display = 'block';
+  tooltip.style.left = event.pageX + 'px'; // マウスのX座標
+  tooltip.style.top = (event.pageY + 20) + 'px'; // マウスのY座標
+});
+
+drawChartButton.addEventListener('mouseout', function() {
+  tooltip.style.display = 'none'; // マウスが離れたら非表示
+});

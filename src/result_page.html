@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <title>計算結果</title>
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
 <link href="./css/common.css" rel="stylesheet"/>
 <link href="./css/result_page.css" rel="stylesheet"/>
@@ -16,9 +17,12 @@
   <button id="save" disabled>ローカルストレージに保存</button>
   <button id="clearLocalStorage">ローカルストレージの保存データをクリア</button>
   <!--<button type="button" onclick="localStorage.clear();">全データクリア</button>-->
+  <button id="drawChart">グラフを描画</button>
+  <div class="tooltip" id="chartTooltip">選択したデータの収入、経費、申告納税額を比較するグラフを描画します。3つまで選択できます。</div>
   <table id="dataTable">
     <thead>
       <tr>
+        <th width="1%">　</th>
         <th width="1%">　</th>
         <th width="2%">削除</th>
         <th width="2%">編集</th>
@@ -41,6 +45,13 @@
       <!-- データはJavaScriptで動的に追加されます -->
     </tbody>
   </table>
+  <!-- モーダルウィンドウ -->
+  <div id="chartModal" class="modal">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <canvas id="myChart" width="400" height="200"></canvas>
+    </div>
+  </div>
   <script src="./js/common.js"></script>
   <script src="./js/result_page.js"></script>
 </body>
