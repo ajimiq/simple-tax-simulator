@@ -19,6 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('newLifeInsurance').addEventListener('change', updateTotal);
   document.getElementById('careInsurance').addEventListener('change', updateTotal);
   document.getElementById('basicDeduction').addEventListener('change', updateTotal);
+  document.getElementById('addBasicDeduction').addEventListener('change', updateTotal);
   document.getElementById('medicalExpense').addEventListener('change', updateTotal);
   document.getElementById('donation').addEventListener('change', updateTotal);
   document.getElementById('dependentDeduction').addEventListener('change', updateTotal);
@@ -137,7 +138,9 @@ function updateTotal() {
   const careInsurance = document.getElementById('careInsurance');
   totalDeduction += parseFloat(careInsurance.value) || 0;
 
-  const basicDeduction = calculateBasicDeduction(totalOperatingProfit);
+  const addBasicDeduction = document.getElementById('addBasicDeduction');
+  let addBasicDeductionValue = parseFloat(addBasicDeduction.value) || 0;
+  const basicDeduction = calculateBasicDeduction(totalOperatingProfit, addBasicDeductionValue);
   document.getElementById('basicDeduction').value = basicDeduction;
   document.getElementById('displayBasicDeduction').value = formatNumber(basicDeduction);
   totalDeduction += basicDeduction;
@@ -221,15 +224,15 @@ function calculateSalaryAfterDeductionAmount(salary) {
 
 // 基礎控除の計算
 // https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/1199.htm
-function calculateBasicDeduction(totalIncome) {
+function calculateBasicDeduction(totalIncome, addBasicDeductionValue) {
   if (totalIncome <= 24000000) {
-    return 480000;
+      return 480000 + addBasicDeductionValue;
   } else if (totalIncome > 24000000 && totalIncome <= 24500000) {
-    return 320000;
+      return 320000 + addBasicDeductionValue;
   } else if (totalIncome > 24500000 && totalIncome <= 25000000) {
-    return 160000;
+      return 160000 + addBasicDeductionValue;
   } else {
-    return 0;
+      return 0;
   }
 }
 
@@ -371,6 +374,7 @@ function setDefaultValuesFromLocalStorage() {
   document.getElementById('spouseIncome').value = lastItem.spouseIncome || '';
   document.getElementById('dependentDeduction').value = lastItem.dependentDeduction || '';
   document.getElementById('basicDeduction').value = lastItem.basicDeduction || '';
+  document.getElementById('addBasicDeduction').value = lastItem.addBasicDeduction || '';
   document.getElementById('careInsurance').value = lastItem.careInsurance || '';
   document.getElementById('medicalExpense').value = lastItem.medicalExpense || '';
   document.getElementById('donation').value = lastItem.donation || '';
@@ -423,6 +427,7 @@ function getInputData() {
     newLifeInsurance: document.getElementById('newLifeInsurance').value,
     careInsurance: document.getElementById('careInsurance').value,
     basicDeduction: document.getElementById('basicDeduction').value,
+    addBasicDeduction: document.getElementById('addBasicDeduction').value,
     donation: document.getElementById('donation').value,
     spouseSpecialDeductionDiv: document.getElementById('spouseSpecialDeductionDiv').value,
     spouseIncome: document.getElementById('spouseIncome').value,

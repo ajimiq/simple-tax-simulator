@@ -111,7 +111,10 @@
   <a class="annotation-link" href="https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/1180.htm" target="_blank">※参考(国税庁のページ)</a><br>
   <label for="basicDeduction">㉔基礎控除：</label>
   <input type="text" id="displayBasicDeduction" class="display-amount" readonly>
-  <a class="annotation-link" href="https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/1199.htm" target="_blank">※参考(国税庁のページ)</a><br>
+  <a class="annotation-link" href="https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/1199.htm" target="_blank">※参考(国税庁のページ)</a>
+  <label for="addBasicDeduction">　基礎控除追加分（※）：</label>
+  <input type="text" id="addBasicDeduction" class="input-amount" oninput="validateNumber(this)" value="0">
+  ※基礎控除が上がった場合のシミュレーション用です。年収に関わらず固定で追加されます。<br>
   <label for="medicalExpense">㉗医療費控除：</label>
   <input type="text" class="input-amount" id="medicalExpense" oninput="validateNumber(this)">
   <a class="annotation-link" href="https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/1120.htm" target="_blank">※参考(国税庁のページ)</a><br>
