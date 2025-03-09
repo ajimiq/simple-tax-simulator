@@ -276,6 +276,8 @@ function addDataToTable(data) {
     deductionDetailsPanel.appendChild(deductionDetail.cloneNode(true));
     deductionDetail.textContent = `介護保険料控除: ${formatNumber(item.careInsurance)}`;
     deductionDetailsPanel.appendChild(deductionDetail.cloneNode(true));
+    deductionDetail.textContent = `地震保険料控除: ${formatNumber(item.earthquakeInsurance)}`;
+    deductionDetailsPanel.appendChild(deductionDetail.cloneNode(true));
     deductionDetail.textContent = `配偶者(特別)控除: ${formatNumber(item.spouseSpecialDeduction)}`;
     deductionDetailsPanel.appendChild(deductionDetail.cloneNode(true));
     deductionDetail.textContent = `扶養控除: ${formatNumber(item.dependentDeduction)}`;

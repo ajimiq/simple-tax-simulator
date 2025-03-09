@@ -18,6 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('smallBusinessMutualAidPremiumDeduction').addEventListener('change', updateTotal);
   document.getElementById('newLifeInsurance').addEventListener('change', updateTotal);
   document.getElementById('careInsurance').addEventListener('change', updateTotal);
+  document.getElementById('earthquakeInsurance').addEventListener('change', updateTotal);
   document.getElementById('basicDeduction').addEventListener('change', updateTotal);
   document.getElementById('addBasicDeduction').addEventListener('change', updateTotal);
   document.getElementById('medicalExpense').addEventListener('change', updateTotal);
@@ -137,7 +138,9 @@ function updateTotal() {
   totalDeduction += parseFloat(newLifeInsurance.value) || 0;
   const careInsurance = document.getElementById('careInsurance');
   totalDeduction += parseFloat(careInsurance.value) || 0;
-
+  const earthquakeInsurance = document.getElementById('earthquakeInsurance');
+  totalDeduction += parseFloat(earthquakeInsurance.value) || 0;
+  
   const addBasicDeduction = document.getElementById('addBasicDeduction');
   let addBasicDeductionValue = parseFloat(addBasicDeduction.value) || 0;
   const basicDeduction = calculateBasicDeduction(totalOperatingProfit, addBasicDeductionValue);
@@ -376,6 +379,7 @@ function setDefaultValuesFromLocalStorage() {
   document.getElementById('basicDeduction').value = lastItem.basicDeduction || '';
   document.getElementById('addBasicDeduction').value = lastItem.addBasicDeduction || '';
   document.getElementById('careInsurance').value = lastItem.careInsurance || '';
+  document.getElementById('earthquakeInsurance').value = lastItem.earthquakeInsurance || '';
   document.getElementById('medicalExpense').value = lastItem.medicalExpense || '';
   document.getElementById('donation').value = lastItem.donation || '';
 
@@ -426,6 +430,7 @@ function getInputData() {
     smallBusinessMutualAidPremiumDeduction: document.getElementById('smallBusinessMutualAidPremiumDeduction').value,
     newLifeInsurance: document.getElementById('newLifeInsurance').value,
     careInsurance: document.getElementById('careInsurance').value,
+    earthquakeInsurance: document.getElementById('earthquakeInsurance').value,  
     basicDeduction: document.getElementById('basicDeduction').value,
     addBasicDeduction: document.getElementById('addBasicDeduction').value,
     donation: document.getElementById('donation').value,
