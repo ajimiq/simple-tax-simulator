@@ -403,7 +403,13 @@ function setDefaultValuesFromLocalStorage() {
       addSalaryField();
     }
   });
+
+  document.getElementById('consumptionTaxReturnFormat').value = lastItem.consumptionTaxReturnFormat || '';
+  document.getElementById('incomeIncludedTaxIncomeStandard').value = lastItem.incomeIncludedTaxIncomeStandard || '';
+  document.getElementById('incomeIncludedTaxIncomeReduction').value = lastItem.incomeIncludedTaxIncomeReduction || '';
+
   changeYear();
+  calculateConsumptionTax();
 }
 
 // 入力データを取得
@@ -447,6 +453,25 @@ function getInputData() {
     totalTax: unFormatNumber(document.getElementById('totalTax').value),
     totalWithholdingTax: unFormatNumber(document.getElementById('totalWithholdingTax').value),
     declaredTax: unFormatNumber(document.getElementById('declaredTax').value),
+
+    consumptionTaxReturnFormat: document.getElementById('consumptionTaxReturnFormat').value,
+    incomeIncludedTaxIncomeStandard: unFormatNumber(document.getElementById('incomeIncludedTaxIncomeStandard').value),
+    incomeIncludedTaxIncomeReduction: unFormatNumber(document.getElementById('incomeIncludedTaxIncomeReduction').value),
+    // incomeExcludedTaxIncomeStandard: unFormatNumber(document.getElementById('incomeExcludedTaxIncomeStandard').value),
+    // incomeExcludedTaxIncomeReduction: unFormatNumber(document.getElementById('incomeExcludedTaxIncomeReduction').value),
+    interimTaxAmount: unFormatNumber(document.getElementById('interimTaxAmount').value),
+    // totalConsumedTaxStandard: unFormatNumber(document.getElementById('totalConsumedTaxStandard').value),
+    // totalConsumedTaxReduction: unFormatNumber(document.getElementById('totalConsumedTaxReduction').value),
+    // totalConsumptionTax: unFormatNumber(document.getElementById('totalConsumptionTax').value),
+    // deductiblePurchaseAmount: unFormatNumber(document.getElementById('deductiblePurchaseAmount').value),
+    // netTaxAmount: unFormatNumber(document.getElementById('netTaxAmount').value),
+    // paymentTaxAmount: unFormatNumber(document.getElementById('paymentTaxAmount').value),
+    // localNetTaxAmount: unFormatNumber(document.getElementById('localNetTaxAmount').value),
+    // localTaxableStandardAmount: unFormatNumber(document.getElementById('localTaxableStandardAmount').value),
+    // localDeductiblePurchaseAmount: unFormatNumber(document.getElementById('localDeductiblePurchaseAmount').value),
+    // localPaymentAmount: unFormatNumber(document.getElementById('localPaymentAmount').value),
+    // localTransferDiscountAmount: unFormatNumber(document.getElementById('localTransferDiscountAmount').value),
+    totalPayableTaxAmount: unFormatNumber(document.getElementById('totalPayableTaxAmount').value),
   };
 
   const salarySections = document.querySelectorAll('.salary-row');
@@ -528,3 +553,89 @@ function changeYear() {
   }
   updateTotal();
 }
+
+// 消費税額を計算する関数
+function calculateConsumptionTax() {
+  const incomeIncludedTaxIncomeStandard = parseInt(unFormatNumber(document.getElementById('incomeIncludedTaxIncomeStandard').value)) || 0; // 収入
+  const incomeIncludedTaxIncomeReduction = parseInt(unFormatNumber(document.getElementById('incomeIncludedTaxIncomeReduction').value)) || 0; // 収入
+  
+  const interimTaxAmount = parseInt(unFormatNumber(document.getElementById('interimTaxAmount').value)) || 0; // 中間納税額
+
+  const consumptionTaxReturnFormat = parseFloat(document.getElementById('consumptionTaxReturnFormat').value);
+  console.log(consumptionTaxReturnFormat);
+  // 消費税率
+  const standardTaxRate = 0.1; // 標準税率
+  const reducedTaxRate = 0.08; // 軽減税率
+
+  console.log(incomeIncludedTaxIncomeStandard);
+  // 売上税抜金額の計算（標準税率 10%）
+  const incomeExcludedTaxIncomeStandard = incomeIncludedTaxIncomeStandard / (1 + standardTaxRate);
+  console.log(incomeExcludedTaxIncomeStandard);
+  document.getElementById('incomeExcludedTaxIncomeStandard').value = formatNumber(incomeExcludedTaxIncomeStandard.toFixed(0));
+
+  // 売上税抜金額の計算（軽減税率 8%）
+  const incomeExcludedTaxIncomeReduction = incomeIncludedTaxIncomeReduction / (1 + reducedTaxRate);
+  document.getElementById('incomeExcludedTaxIncomeReduction').value = formatNumber(incomeExcludedTaxIncomeReduction.toFixed(0));
+
+  // 合計消費税額の計算（標準税率 10%）
+  const totalConsumedTaxStandard = incomeIncludedTaxIncomeStandard - incomeExcludedTaxIncomeStandard;
+  document.getElementById('totalConsumedTaxStandard').value = formatNumber(totalConsumedTaxStandard.toFixed(0));
+
+  // 合計消費税額の計算（軽減税率 8%）
+  const totalConsumedTaxReduction = incomeIncludedTaxIncomeReduction - incomeExcludedTaxIncomeReduction;
+  document.getElementById('totalConsumedTaxReduction').value = formatNumber(totalConsumedTaxReduction.toFixed(0));
+
+  // 課税標準額の計算
+  const totalConsumptionTax = (totalConsumedTaxStandard + totalConsumedTaxReduction) * 0.78;
+  document.getElementById('totalConsumptionTax').value = formatNumber(totalConsumptionTax.toFixed(0));
+
+  // 控除対応仕入額の計算
+  const deductiblePurchaseAmount = totalConsumptionTax * (1 - consumptionTaxReturnFormat);
+  document.getElementById('deductiblePurchaseAmount').value = formatNumber(deductiblePurchaseAmount.toFixed(0));
+
+  // 差引税額の計算
+  const netTaxAmount = Math.round((totalConsumptionTax - deductiblePurchaseAmount) / 100) * 100;
+  document.getElementById('netTaxAmount').value = formatNumber(netTaxAmount.toFixed(0));
+
+  // 納付税額の計算
+  const paymentTaxAmount = netTaxAmount - interimTaxAmount;
+  document.getElementById('paymentTaxAmount').value = formatNumber(paymentTaxAmount > 0 ? paymentTaxAmount.toFixed(0) : 0);
+
+  // 地方消費税の計算
+  const localNetTaxAmount = netTaxAmount;
+  document.getElementById('localNetTaxAmount').value = formatNumber(localNetTaxAmount.toFixed(0));
+
+  const localTaxableStandardAmount = totalConsumptionTax * 0.22;
+  document.getElementById('localTaxableStandardAmount').value = formatNumber(localTaxableStandardAmount.toFixed(0));
+
+  const localDeductiblePurchaseAmount = localTaxableStandardAmount * (1 - consumptionTaxReturnFormat);
+  document.getElementById('localDeductiblePurchaseAmount').value = formatNumber(localDeductiblePurchaseAmount.toFixed(0));
+
+  const localPaymentAmount = Math.round((localNetTaxAmount * (22 / 78)) / 100) * 100;
+  document.getElementById('localPaymentAmount').value = formatNumber(localPaymentAmount.toFixed(0));
+
+  const localTransferDiscountAmount = Math.round((localNetTaxAmount * (22 / 78)) / 100) * 100;
+  document.getElementById('localTransferDiscountAmount').value = formatNumber(localTransferDiscountAmount.toFixed(0));
+
+  // 支払う消費税額の計算
+  const totalPayableTaxAmount = paymentTaxAmount + localTransferDiscountAmount;
+  document.getElementById('totalPayableTaxAmount').value = formatNumber(totalPayableTaxAmount.toFixed(0));
+}
+
+// イベントリスナーを追加
+document.getElementById('consumptionTaxReturnFormat').addEventListener('change', calculateConsumptionTax);
+document.getElementById('incomeIncludedTaxIncomeStandard').addEventListener('change', calculateConsumptionTax);
+document.getElementById('incomeIncludedTaxIncomeReduction').addEventListener('change', calculateConsumptionTax);
+document.getElementById('interimTaxAmount').addEventListener('change', calculateConsumptionTax);
+
+// 収入反映ボタンのイベントリスナー
+document.getElementById('reflectIncome').addEventListener('click', function() {
+  const totalIncome = unFormatNumber(document.getElementById('totalIncome').value);
+  const incomeIncludedTaxInput = document.getElementById('incomeIncludedTaxIncomeStandard');
+  
+  // 収入の値を売上税込金額に反映
+  incomeIncludedTaxInput.value = totalIncome;
+  
+  // 消費税の再計算
+  calculateConsumptionTax();
+});

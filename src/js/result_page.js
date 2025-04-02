@@ -360,9 +360,14 @@ function addDataToTable(data) {
     declaredTaxCell.textContent = formatNumber(item.declaredTax);
     declaredTaxCell.className = 'emphasis-amount';
 
-    // 16.json
+    // 16.消費税申告納税額
+    const consumptionTaxCell = row.insertCell();
+    consumptionTaxCell.textContent = formatNumber(item.totalPayableTaxAmount);
+    consumptionTaxCell.className = 'emphasis-amount';
+    console.log(row);
+    // 17.json
     const hiddenTag = document.createElement('hidden');
-    declaredTaxCell.parentNode.insertBefore(hiddenTag, declaredTaxCell.nextSibling);
+    consumptionTaxCell.parentNode.insertBefore(hiddenTag, consumptionTaxCell.nextSibling);
     hiddenTag.className = 'json_' + index;
     hiddenTag.setAttribute('value', JSON.stringify(item));
 
@@ -479,8 +484,10 @@ let myChart; // グローバル変数としてChartインスタンスを保持
 function drawChart(data) {
   const labels = data.map(item => item.title);
   const incomeData = data.map(item => item.totalIncome);
-  const expenseData = data.map(item => item.expenseAmount);
+  const taxableIncomeAmountData = data.map(item => item.taxableIncomeAmount);
+  const totalOperatingProfitData = data.map(item => item.totalOperatingProfit);
   const declaredTaxData = data.map(item => item.declaredTax);
+  const totalPayableTaxAmountData = data.map(item => item.totalPayableTaxAmount);
 
   // 既存のグラフが存在する場合は破棄
   if (myChart) {
@@ -494,27 +501,48 @@ function drawChart(data) {
       labels: labels,
       datasets: [
         {
-          label: '収入',
+          label: '収入(左軸)',
           data: incomeData,
-          backgroundColor: 'rgba(75, 192, 192, 0.2)',
-          borderColor: 'rgba(75, 192, 192, 1)',
-          borderWidth: 1,
+          backgroundColor: 'skyblue',
+          borderColor: 'skyblue',
+          borderWidth: 2,
+          borderRadius: 1,
           yAxisID: 'left-y-axis' // 左軸
         },
         {
-          label: '経費',
-          data: expenseData,
-          backgroundColor: 'rgba(255, 99, 132, 0.2)',
-          borderColor: 'rgba(255, 99, 132, 1)',
+          label: '所得(左軸)',
+          data: totalOperatingProfitData,
+          backgroundColor: 'lightgreen',
+          borderColor: 'lightgreen',
+          borderWidth: 2,
+          borderRadius: 1,
+          yAxisID: 'left-y-axis' // 左軸
+        },
+        {
+          label: '課税所得(左軸)',
+          data: taxableIncomeAmountData,
+          backgroundColor: 'lime',
+          borderColor: 'lime',
+          borderWidth: 2,
+          borderRadius: 1,
+          yAxisID: 'left-y-axis' // 左軸
+        },
+        {
+          label: '申告納税額(右軸)',
+          data: declaredTaxData,
+          backgroundColor: 'orange',
+          borderColor: 'black',
           borderWidth: 1,
+          borderRadius: Number.MAX_VALUE,
           yAxisID: 'right-y-axis' // 右軸
         },
         {
-          label: '申告納税額',
-          data: declaredTaxData,
-          backgroundColor: 'rgba(54, 162, 235, 0.2)',
-          borderColor: 'rgba(54, 162, 235, 1)',
+          label: '消費税申告納税額(右軸)',
+          data: totalPayableTaxAmountData,
+          backgroundColor: 'pink',
+          borderColor: 'black',
           borderWidth: 1,
+          borderRadius: Number.MAX_VALUE,
           yAxisID: 'right-y-axis' // 右軸
         }
       ]

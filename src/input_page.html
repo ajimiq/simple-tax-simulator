@@ -148,7 +148,7 @@
       <option value="5">5人</option>
       <option value="6">6人</option>
     </select>
-      <a class="annotation-link" href="https://www.nta.go.jp/publication/pamph/gensen/0023012-317.pdf" target="_blank">※参考(国税庁のページ)</a></p>
+    <a class="annotation-link" href="https://www.nta.go.jp/publication/pamph/gensen/0023012-317.pdf" target="_blank">※参考(国税庁のページ)</a></p>
     <!-- <label for="xxxxx" class="label-sub-total-amount">㊺再々差引所得税額(基準所得税額)</label><input type="text" id="xxxxx" class="display-sub-total-amount" readonly> -->
   </div>
   <label for="reconstructionSpecialIncomeTax"><span id="reconstructionSpecialIncomeTaxLabel"></span>復興特別所得税額：</label>
@@ -160,6 +160,76 @@
   <input type="text" id="totalWithholdingTax" class="display-amount" readonly><br>
   <label for="declaredTax" class="label-sub-total-amount"><span id="declaredTaxLabel"></span>申告納税額：</label>
   <input type="text" id="declaredTax" class="display-sub-total-amount" readonly>
+
+  <hr>
+  <h2>申告消費税</h2>
+  <a class="annotation-link" href="https://www.nta.go.jp/taxes/shiraberu/taxanswer/shohi/6351.htm" target="_blank">※参考(国税庁のページ)</a></p>
+  <label for="consumptionTaxReturnFormat">申告する形式:</label>
+  <select id="consumptionTaxReturnFormat">
+    <option value="">申告する形式を選択してください</option>
+    <option value="0.0">免税事業者</option>
+    <option value="0.2">２割特例（インボイス発行事業者となる小規模事業者に対する負担軽減措置）</option>
+    <option value="0.1">第1種事業（卸売業）　みなし仕入率：90％</option>
+    <option value="0.2">第2種事業（小売業、農業・林業・漁業（飲食料品の譲渡に係る事業に限る））　みなし仕入率：80％</option>
+    <option value="0.3">第3種事業（農業・林業・漁業（飲食料品の譲渡に係る事業を除く）、鉱業、建設業、製造業、電気業、ガス業、熱供給業および水道業）　みなし仕入率：70％</option>
+    <option value="0.4">第4種事業（第1種事業、第2種事業、第3種事業、第5種事業および第6種事業以外の事業）　みなし仕入率：60％</option>
+    <option value="0.5">第5種事業（運輸通信業、金融業および保険業、サービス業（飲食店業に該当するものを除く））　みなし仕入率：50％</option>
+    <option value="0.6">第6種事業（不動産業）　みなし仕入率：40％</option>
+  </select>
+  <br>
+
+  <label for="incomeIncludedTaxIncomeStandard">売上税込金額(10%)：</label>
+  <input type="text" id="incomeIncludedTaxIncomeStandard" class="input-amount" oninput="validateNumber(this)">
+  <button type="button" id="reflectIncome" title="収入の値を消費税計算の売上税込金額に反映します">収入を反映</button>
+  <br>
+
+  <label for="incomeIncludedTaxIncomeReduction">売上税込金額(8%)：</label>
+  <input type="text" id="incomeIncludedTaxIncomeReduction" class="input-amount" oninput="validateNumber(this)"><br>
+
+  <label for="incomeExcludedTaxIncomeStandard">売上税抜金額(10%)：</label>
+  <input type="text" id="incomeExcludedTaxIncomeStandard" class="display-amount" readonly"><br>
+
+  <label for="incomeExcludedTaxIncomeReduction">売上税抜金額(8%)：</label>
+  <input type="text" id="incomeExcludedTaxIncomeReduction" class="display-amount" readonly"><br>
+
+  <label for="totalConsumedTaxStandard">合計消費税額(10%)：</label>
+  <input type="text" id="totalConsumedTaxStandard" class="display-amount" readonly /><br>
+
+  <label for="totalConsumedTaxReduction">合計消費税額(8%)：</label>
+  <input type="text" id="totalConsumedTaxReduction" class="display-amount" readonly /><br>
+
+  <label for="totalConsumptionTax">課税標準額：</label>
+  <input type="text" id="totalConsumptionTax" class="display-amount" readonly /><br>
+
+  <label for="deductiblePurchaseAmount">控除対応仕入額：</label>
+  <input type="text" id="deductiblePurchaseAmount" class="display-amount" readonly /><br>
+
+  <label for="netTaxAmount">差引税額：</label>
+  <input type="text" id="netTaxAmount" class="display-amount" readonly /><br>
+
+  <label for="interimTaxAmount">中間納税額：</label>
+  <input type="text" id="interimTaxAmount" class="display-amount" readonly /><br>
+
+  <label for="paymentTaxAmount">納付税額：</label>
+  <input type="text" id="paymentTaxAmount" class="display-sub-total-amount" readonly /><br>
+
+  <label for="localNetTaxAmount">地方消費税の差引税額：</label>
+  <input type="text" id="localNetTaxAmount" class="display-amount" readonly /><br>
+
+  <label for="localTaxableStandardAmount">地方消費税の課税標準額：</label>
+  <input type="text" id="localTaxableStandardAmount" class="display-amount" readonly /><br>
+
+  <label for="localDeductiblePurchaseAmount">地方消費税の控除対応仕入額：</label>
+  <input type="text" id="localDeductiblePurchaseAmount" class="display-amount" readonly /><br>
+
+  <label for="localPaymentAmount">地方消費税の納付額：</label>
+  <input type="text" id="localPaymentAmount" class="display-sub-total-amount" readonly /><br>
+
+  <label for="localTransferDiscountAmount">地方消費税の納付譲渡割額：</label>
+  <input type="text" id="localTransferDiscountAmount" class="display-amount" readonly /><br>
+
+  <label for="totalPayableTaxAmount">支払う消費税額：</label>
+  <input type="text" id="totalPayableTaxAmount" class="display-sub-total-amount" readonly /><br>
 
   <hr>
   <button type="button" id="saveButton">記録する（上書き）</button>
